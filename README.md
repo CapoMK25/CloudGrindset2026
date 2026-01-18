@@ -12,3 +12,8 @@ Starting off with the following ingredients:
 - Documentation here along the way with instructions and step-by-step guides, docs/ folder later
 - Where to Live 2024 as a bridge project through AWS or similar (S3 .py templates, Route53.py template (already on another repo), deploy.sh Bash script to automate deployment)
 - Ansible deployment where applicable
+
+GitHub side of this repo (since it's infrastructure heavy)
+
+- Issues created for each task (spin up VMWare, spin up AWS etc)
+- README (this) to be changed to instructions instead of documentation later on
