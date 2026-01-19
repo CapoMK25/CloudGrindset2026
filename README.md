@@ -4,7 +4,6 @@ A repo to document my progress in Cloud/Linux/DevOps/IaC/SRE starting in 2026 as
 Starting off with the following ingredients: 
 
 - Vagrant VM setup for Linux (Ubuntu/RHEL/CentOS) and maybe AWS EC2 or other service as well, all through IaC
-- VMWare (not documented on here)
 - Ansible where applicable
 - Heavy Python troposphere IaC with awacs if going with AWS later
 - Generating Vagrant or Ansible configs from Python templates (troposphere) at some point? Maybe?
