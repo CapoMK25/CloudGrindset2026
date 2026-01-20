@@ -1,11 +1,11 @@
 from troposphere import Template, Ref, Parameter, Output
 import troposphere.ec2 as ec2
 
-# This is just a troposphere demonstration for now without deployment
+# This is just a troposphere demonstration for now without deployment running on Localstack
 
 # 1️⃣ Create template
 t = Template()
-t.set_description("Local NGINX server simulation for static site without AWS on WSL")
+t.set_description("Local NGINX server simulation for static site without AWS on Localstack")
 
 # 2️⃣ Parameters (optional)
 instance_type_param = t.add_parameter(Parameter(
