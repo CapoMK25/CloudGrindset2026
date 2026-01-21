@@ -1,0 +1,29 @@
+Description: Baseline EC2 Linux setup for LocalStack testing
+Parameters:
+  InstanceType:
+    Default: t3.nano
+    Description: EC2 Instance Type
+    Type: String
+Resources:
+  WebServerInstance:
+    Properties:
+      ImageId: ami-fake-local
+      InstanceType: !Ref 'InstanceType'
+      SecurityGroups:
+        - !Ref 'WebServerSG'
+      UserData: !Base64 "#!/bin/bash\napt update\napt install -y nginx\nsystemctl enable nginx\nsystemctl start nginx\n"
+    Type: AWS::EC2::Instance
+  WebServerSG:
+    Properties:
+      GroupDescription: Allow HTTP and SSH access
+      SecurityGroupIngress:
+        - CidrIp: '0.0.0.0/0'
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        - CidrIp: '0.0.0.0/0'
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+    Type: AWS::EC2::SecurityGroup
+
