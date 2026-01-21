@@ -1,8 +1,7 @@
-from troposphere import Template
+from troposphere import Template, Sub
 from troposphere.iam import (
     User,
     Group,
-    PolicyType,
     ManagedPolicy,
     UserToGroupAddition
 )
@@ -10,11 +9,13 @@ from troposphere.iam import (
 t = Template()
 t.set_description("Baseline IAM setup for LocalStack for myself")
 
+group_name = Sub("${AWS::StackName}-Admins")
+
 # IAM Group
 admins_group = t.add_resource(
     Group(
         "AdminsGroup",
-        GroupName="Admins"
+        GroupName=group_name
     )
 )
 
@@ -22,15 +23,15 @@ admins_group = t.add_resource(
 mk_user = t.add_resource(
     User(
         "MKUser",
-        UserName="MK"
+        UserName=Sub("${AWS::StackName}-MK")
     )
 )
 
-# Attach AWS managed AdministratorAccess policy (the default)
+# Managed Policy
 admin_policy = t.add_resource(
     ManagedPolicy(
         "AdminsManagedPolicy",
-        ManagedPolicyName="AdminsAdministratorAccess",
+        ManagedPolicyName=Sub("${AWS::StackName}-AdminsAdministratorAccess"),
         PolicyDocument={
             "Version": "2012-10-17",
             "Statement": [
@@ -41,7 +42,7 @@ admin_policy = t.add_resource(
                 }
             ]
         },
-        Groups=["Admins"]
+        Groups=[group_name]
     )
 )
 
@@ -49,8 +50,8 @@ admin_policy = t.add_resource(
 t.add_resource(
     UserToGroupAddition(
         "AddMKToAdmins",
-        GroupName="Admins",
-        Users=["MK"]
+        GroupName=group_name,
+        Users=[Sub("${AWS::StackName}-MK")]
     )
 )
 

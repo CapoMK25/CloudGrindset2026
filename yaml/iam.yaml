@@ -2,19 +2,19 @@ Description: Baseline IAM setup for LocalStack for myself
 Resources:
   AddMKToAdmins:
     Properties:
-      GroupName: Admins
+      GroupName: !Sub '${AWS::StackName}-Admins'
       Users:
-        - MK
+        - !Sub '${AWS::StackName}-MK'
     Type: AWS::IAM::UserToGroupAddition
   AdminsGroup:
     Properties:
-      GroupName: Admins
+      GroupName: !Sub '${AWS::StackName}-Admins'
     Type: AWS::IAM::Group
   AdminsManagedPolicy:
     Properties:
       Groups:
-        - Admins
-      ManagedPolicyName: AdminsAdministratorAccess
+        - !Sub '${AWS::StackName}-Admins'
+      ManagedPolicyName: !Sub '${AWS::StackName}-AdminsAdministratorAccess'
       PolicyDocument:
         Statement:
           - Action: '*'
@@ -24,6 +24,6 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
   MKUser:
     Properties:
-      UserName: MK
+      UserName: !Sub '${AWS::StackName}-MK'
     Type: AWS::IAM::User
 
