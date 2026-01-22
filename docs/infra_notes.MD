@@ -208,3 +208,5 @@ $ aws --endpoint-url=http://localhost:4566 cloudformation describe-stack-events 
 - Maybe CI/CD for today, we'll see
 
 Installed pylint locally and the plan is to integrate that to the codebase via CI/CD. The linter now runs locally and works.
+
+- Got GitHub Actions CI/CD working and runnign the linter and deployment as expected. Everything works for now.
