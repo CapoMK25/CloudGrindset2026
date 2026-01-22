@@ -2,6 +2,7 @@
 # Deploy all YAML CloudFormation templates in the yaml folder to LocalStack
 # Cross-platform: works on GitHub Actions (Linux) and Windows Git Bash
 
+export AWS_DEFAULT_REGION=us-east-1
 ENDPOINT_URL="http://localhost:4566"
 
 # Resolve repo root (script is in lab_scripts/)
