@@ -47,4 +47,8 @@ jobs:
 
       # Step 7: Deploy stacks to LocalStack
       - name: Deploy to LocalStack
+        env:
+            AWS_ACCESS_KEY_ID: test
+            AWS_SECRET_ACCESS_KEY: test
+            AWS_DEFAULT_REGION: us-east-1
         run: bash ./lab_scripts/deploy.sh

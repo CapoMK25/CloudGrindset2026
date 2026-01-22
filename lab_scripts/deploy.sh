@@ -3,6 +3,8 @@
 # Cross-platform: works on GitHub Actions (Linux) and Windows Git Bash
 
 export AWS_DEFAULT_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
+export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
 ENDPOINT_URL="http://localhost:4566"
 
 # Resolve repo root (script is in lab_scripts/)
