@@ -1,6 +1,11 @@
-from troposphere import Template, Ref, Parameter
+"""
+EC2 template for LocalStack deployment locally.
+Creates an EC2 instance for LocalStack via the Troposphere Python Library.
+"""
+
+from troposphere import Template, Ref, Parameter, Base64
 from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
-from troposphere import Base64
+
 
 t = Template()
 t.set_description("Baseline EC2 Linux setup for LocalStack testing")
@@ -37,21 +42,22 @@ web_sg = t.add_resource(
     )
 )
 
-# EC2 Instance with Base64 UserData
-web_instance = t.add_resource(
-    Instance(
-        "WebServerInstance",
-        ImageId="ami-fake-local",  # LocalStack placeholder AMI
-        InstanceType=Ref(instance_type_param),
-        SecurityGroups=[Ref(web_sg)],
-        UserData=Base64(
-            '''#!/bin/bash
+# Define USERDATA_SCRIPT here
+USERDATA_SCRIPT = '''#!/bin/bash
 apt update
 apt install -y nginx
 systemctl enable nginx
 systemctl start nginx
 '''
-        )
+
+# EC2 Instance
+web_instance = t.add_resource(
+    Instance(
+        "WebServerInstance",
+        ImageId="ami-fake-local",  # LocalStack placeholder, not a real AMI
+        InstanceType=Ref(instance_type_param),
+        SecurityGroups=[Ref(web_sg)],
+        UserData=Base64(USERDATA_SCRIPT)
     )
 )
 

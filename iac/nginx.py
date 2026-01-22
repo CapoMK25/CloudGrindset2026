@@ -1,5 +1,11 @@
-from troposphere import Template, Ref, Parameter, Output
-import troposphere.ec2 as ec2
+"""
+NGINX machine template for LocalStack deployment locally.
+Creates an NGINX instance for LocalStack via the Troposphere Python Library.
+"""
+
+from troposphere import Template, Ref, Parameter, Output, Base64
+from troposphere.ec2 import SecurityGroup, SecurityGroupRule, Instance
+
 
 # This is just a troposphere demonstration for now without deployment running on Localstack
 
@@ -16,29 +22,29 @@ instance_type_param = t.add_parameter(Parameter(
 ))
 
 # 3️⃣ Security Group (simulation)
-sg = t.add_resource(ec2.SecurityGroup(
+sg = t.add_resource(SecurityGroup(
     "WebSG",
     GroupDescription="Allow HTTP/SSH",
     SecurityGroupIngress=[
-        ec2.SecurityGroupRule(IpProtocol="tcp", FromPort=22, ToPort=22, CidrIp="0.0.0.0/0"),
-        ec2.SecurityGroupRule(IpProtocol="tcp", FromPort=80, ToPort=80, CidrIp="0.0.0.0/0"),
+        SecurityGroupRule(IpProtocol="tcp", FromPort=22, ToPort=22, CidrIp="0.0.0.0/0"),
+        SecurityGroupRule(IpProtocol="tcp", FromPort=80, ToPort=80, CidrIp="0.0.0.0/0"),
     ]
 ))
 
-# 4️⃣ EC2 Instance (simulated)
-userdata_script = """#!/bin/bash
+# 4️⃣ NGINX Instance (simulated)
+USERDATA_SCRIPT = """#!/bin/bash
 apt update
 apt install -y nginx
 systemctl enable nginx
 systemctl start nginx
 """
 
-instance = t.add_resource(ec2.Instance(
+instance = t.add_resource(Instance(
     "WebServer",
     InstanceType=Ref(instance_type_param),
     ImageId="ami-fake-local",  # placeholder since we’re not deploying to AWS
     SecurityGroups=[Ref(sg)],
-    UserData=userdata_script
+    UserData=Base64(USERDATA_SCRIPT)
 ))
 
 # 5️⃣ Output
