@@ -1,3 +1,8 @@
+"""
+IAM template for LocalStack deployment locally.
+Creates Users, Groups, and Policies via the Troposphere Python Library.
+"""
+
 from troposphere import Template, Sub
 from troposphere.iam import (
     User,

@@ -201,3 +201,10 @@ $ aws --endpoint-url=http://localhost:4566 cloudformation describe-stack-events 
     ]
 }
 (.venv)
+
+
+# 22.1.2026
+
+- Maybe CI/CD for today, we'll see
+
+Installed pylint locally and the plan is to integrate that to the codebase via CI/CD. The linter now runs locally and works.
