@@ -407,3 +407,5 @@ upload: ..\regional-map-2024\.git\hooks\pre-rebase.sample to s3://regional-map-2
 - Added Cloudwatch IaC as well.
 
 Next step: separating the CI/CD to different pipelines instead of one big pipeline doing all the changes each run.
+
+Separated and recreated both files, testing now.
