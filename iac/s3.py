@@ -11,13 +11,13 @@ t = Template()
 t.set_description("LocalStack S3 bucket for regional-map-2024 hosting")
 
 # Bucket name
-bucket_name = "regional-map-2024-website"
+BUCKET_NAME = "regional-map-2024-website"
 
 # Create the S3 bucket
 s3_bucket = t.add_resource(
     Bucket(
         "RegionalMap2024Bucket",
-        BucketName=bucket_name,
+        BucketName=BUCKET_NAME,
         WebsiteConfiguration=WebsiteConfiguration(
             IndexDocument="index.html"
         )
