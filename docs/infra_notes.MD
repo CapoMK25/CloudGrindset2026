@@ -401,3 +401,5 @@ upload: ..\regional-map-2024\.git\hooks\pre-rebase.sample to s3://regional-map-2
 (.venv)
 
 - I even got it to show on my browser through the S3 bucket on Localstack at: http://localhost:4566/regional-map-2024-website/index.html
+
+- Added a fake dummy DynamoDB table to show localstack competence, deploying that now.
