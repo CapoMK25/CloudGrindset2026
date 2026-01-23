@@ -1,0 +1,13 @@
+Description: LocalStack CloudWatch Logs setup
+Resources:
+  DemoLogGroup:
+    Properties:
+      LogGroupName: cloudgrindset2026-logs
+      RetentionInDays: 14
+    Type: AWS::Logs::LogGroup
+  DemoLogStream:
+    Properties:
+      LogGroupName: !Ref 'DemoLogGroup'
+      LogStreamName: demo-stream
+    Type: AWS::Logs::LogStream
+
