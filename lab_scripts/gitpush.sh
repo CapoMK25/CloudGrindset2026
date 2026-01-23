@@ -1,13 +1,24 @@
+#!/usr/bin/env bash
+set -e
+
 git add .
 
-echo 'Enter the commit message:'
-read commitMessage
+read -rp "Enter commit message: " commitMessage
+
+if [ -z "$commitMessage" ]; then
+  echo "Commit message cannot be empty"
+  exit 1
+fi
 
 git commit -m "$commitMessage"
 
-echo 'Enter the name of the branch:'
-read branch
+read -rp "Enter branch name (default: current): " branch
 
-git push origin $branch
+if [ -z "$branch" ]; then
+  branch=$(git branch --show-current)
+fi
 
-read
+echo "Pushing to origin/$branch"
+git push origin "$branch"
+
+echo "Done"
