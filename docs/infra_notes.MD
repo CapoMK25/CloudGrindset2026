@@ -4,6 +4,7 @@
 - Localstack running through Docker locally 
 - IaC setup through troposphere and YAML, just like on AWS with CloudFormation
 - Scripts to automate things locally
+- GitHub Actions CI pipeline to automate linting and deployment
 
 # 21.1.2026
 
@@ -404,3 +405,5 @@ upload: ..\regional-map-2024\.git\hooks\pre-rebase.sample to s3://regional-map-2
 
 - Added a fake dummy DynamoDB table to show localstack competence, deploying that now.
 - Added Cloudwatch IaC as well.
+
+Next step: separating the CI/CD to different pipelines instead of one big pipeline doing all the changes each run.
