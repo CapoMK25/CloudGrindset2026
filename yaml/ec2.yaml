@@ -1,4 +1,4 @@
-Description: Baseline EC2 Linux setup for LocalStack testing
+Description: EC2 Linux setup integrated with a Custom Networking Stack
 Parameters:
   InstanceType:
     Default: t3.nano
@@ -9,8 +9,12 @@ Resources:
     Properties:
       ImageId: ami-fake-local
       InstanceType: !Ref 'InstanceType'
-      SecurityGroups:
-        - !Ref 'WebServerSG'
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref 'WebServerSG'
+          SubnetId: !ImportValue 'GrindsetPublicSubnet-ID'
       UserData: !Base64 "#!/bin/bash\napt update\napt install -y nginx\nsystemctl enable nginx\nsystemctl start nginx\n"
     Type: AWS::EC2::Instance
   WebServerSG:
@@ -25,5 +29,6 @@ Resources:
           FromPort: 80
           IpProtocol: tcp
           ToPort: 80
+      VpcId: !ImportValue 'GrindsetVPC-ID'
     Type: AWS::EC2::SecurityGroup
 

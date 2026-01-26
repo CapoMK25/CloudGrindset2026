@@ -1,14 +1,13 @@
 """
 EC2 template for LocalStack deployment locally.
-Creates an EC2 instance for LocalStack via the Troposphere Python Library.
+Creates an EC2 instance linked to a custom VPC via the Troposphere Python Library.
 """
 
-from troposphere import Template, Ref, Parameter, Base64
-from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
-
+from troposphere import Template, Ref, Parameter, Base64, ImportValue
+from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule, NetworkInterfaceProperty
 
 t = Template()
-t.set_description("Baseline EC2 Linux setup for LocalStack testing")
+t.set_description("EC2 Linux setup integrated with a Custom Networking Stack")
 
 # Parameter for instance type
 instance_type_param = t.add_parameter(
@@ -20,11 +19,12 @@ instance_type_param = t.add_parameter(
     )
 )
 
-# Security Group
+# 1. Security Group - Linked to the custom VPC via an ImportValue
 web_sg = t.add_resource(
     SecurityGroup(
         "WebServerSG",
         GroupDescription="Allow HTTP and SSH access",
+        VpcId=ImportValue("GrindsetVPC-ID"),
         SecurityGroupIngress=[
             SecurityGroupRule(
                 IpProtocol="tcp",
@@ -42,7 +42,7 @@ web_sg = t.add_resource(
     )
 )
 
-# Define USERDATA_SCRIPT here
+# Define USERDATA_SCRIPT
 USERDATA_SCRIPT = '''#!/bin/bash
 apt update
 apt install -y nginx
@@ -50,13 +50,20 @@ systemctl enable nginx
 systemctl start nginx
 '''
 
-# EC2 Instance
+# 2. EC2 Instance - Using NetworkInterface to specify Subnet and SG
 web_instance = t.add_resource(
     Instance(
         "WebServerInstance",
-        ImageId="ami-fake-local",  # LocalStack placeholder, not a real AMI
+        ImageId="ami-fake-local",
         InstanceType=Ref(instance_type_param),
-        SecurityGroups=[Ref(web_sg)],
+        NetworkInterfaces=[
+            NetworkInterfaceProperty(
+                AssociatePublicIpAddress=True,
+                DeviceIndex="0",
+                GroupSet=[Ref(web_sg)],
+                SubnetId=ImportValue("GrindsetPublicSubnet-ID") # Importing Subnet ID
+            )
+        ],
         UserData=Base64(USERDATA_SCRIPT)
     )
 )
