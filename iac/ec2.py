@@ -24,7 +24,7 @@ web_sg = t.add_resource(
     SecurityGroup(
         "WebServerSG",
         GroupDescription="Allow HTTP and SSH access",
-        VpcId=ImportValue("GrindsetVPC-ID"),  
+        VpcId=ImportValue("GrindsetVPC-ID"),
         SecurityGroupIngress=[
             SecurityGroupRule(
                 IpProtocol="tcp",

@@ -5,8 +5,8 @@ Creates a custom VPC, Subnets, and Routing infrastructure via Troposphere.
 
 from troposphere import Template, Ref, Output, Export, Tags
 from troposphere.ec2 import (
-    VPC, Subnet, InternetGateway, 
-    VPCGatewayAttachment, RouteTable, Route, 
+    VPC, Subnet, InternetGateway,
+    VPCGatewayAttachment, RouteTable, Route,
     SubnetRouteTableAssociation
 )
 
