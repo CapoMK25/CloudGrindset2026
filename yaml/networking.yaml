@@ -1,0 +1,72 @@
+Description: Custom VPC Networking Layer for CloudGrindset2026
+Outputs:
+  PublicSubnetId:
+    Description: The ID of the Public Subnet
+    Export:
+      Name: GrindsetPublicSubnet-ID
+    Value: !Ref 'PublicSubnet'
+  VpcId:
+    Description: The ID of the VPC
+    Export:
+      Name: GrindsetVPC-ID
+    Value: !Ref 'MainVPC'
+Resources:
+  InternetGateway:
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Grindset-IGW
+    Type: AWS::EC2::InternetGateway
+  MainVPC:
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: Grindset-VPC
+    Type: AWS::EC2::VPC
+  PrivateSubnet:
+    Properties:
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Name
+          Value: Private-Subnet-DB
+      VpcId: !Ref 'MainVPC'
+    Type: AWS::EC2::Subnet
+  PublicRoute:
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref 'InternetGateway'
+      RouteTableId: !Ref 'PublicRouteTable'
+    Type: AWS::EC2::Route
+  PublicRouteTable:
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Public-RT
+      VpcId: !Ref 'MainVPC'
+    Type: AWS::EC2::RouteTable
+  PublicSubnet:
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Public-Subnet-Web
+      VpcId: !Ref 'MainVPC'
+    Type: AWS::EC2::Subnet
+  PublicSubnetRouteTableAssociation:
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      SubnetId: !Ref 'PublicSubnet'
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  VPCGatewayAttachment:
+    Properties:
+      InternetGatewayId: !Ref 'InternetGateway'
+      VpcId: !Ref 'MainVPC'
+    Type: AWS::EC2::VPCGatewayAttachment
+
