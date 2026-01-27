@@ -4,7 +4,7 @@ Creates an EC2 instance linked to a custom VPC via the Troposphere Python Librar
 """
 
 from troposphere import Template, Ref, Parameter, Base64, ImportValue
-from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule, NetworkInterfaceProperty
+from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
 
 t = Template()
 t.set_description("EC2 Linux setup integrated with a Custom Networking Stack")
@@ -56,7 +56,7 @@ web_instance = t.add_resource(
         "WebServerInstance",
         ImageId="ami-fake-local",
         InstanceType=Ref(instance_type_param),
-        SubnetId=ImportValue("GrindsetPublicSubnet-ID"), 
+        SubnetId=ImportValue("GrindsetPublicSubnet-ID"),
         SecurityGroupIds=[Ref(web_sg)],
         UserData=Base64(USERDATA_SCRIPT)
     )
