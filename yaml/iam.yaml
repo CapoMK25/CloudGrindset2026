@@ -1,4 +1,9 @@
-Description: Baseline IAM setup for LocalStack for myself
+Description: Baseline IAM setup with an EC2 Role for LocalStack
+Outputs:
+  WebServerInstanceProfileName:
+    Export:
+      Name: !Sub '${AWS::StackName}-InstanceProfileName'
+    Value: !Ref 'WebServerInstanceProfile'
 Resources:
   AddMKToAdmins:
     Properties:
@@ -26,4 +31,35 @@ Resources:
     Properties:
       UserName: !Sub '${AWS::StackName}-MK'
     Type: AWS::IAM::User
+  WebServerInstanceProfile:
+    Properties:
+      InstanceProfileName: !Sub '${AWS::StackName}-EC2-Profile'
+      Roles:
+        - !Ref 'WebServerRole'
+    Type: AWS::IAM::InstanceProfile
+  WebServerRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+        Version: '2012-10-17'
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - s3:Get*
+                  - s3:List*
+                Effect: Allow
+                Resource:
+                  - arn:aws:s3:::regional-map-2024-website
+                  - arn:aws:s3:::regional-map-2024-website/*
+            Version: '2012-10-17'
+          PolicyName: S3ReadAccess
+      RoleName: !Sub '${AWS::StackName}-WebServerRole'
+    Type: AWS::IAM::Role
 

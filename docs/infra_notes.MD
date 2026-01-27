@@ -409,3 +409,32 @@ upload: ..\regional-map-2024\.git\hooks\pre-rebase.sample to s3://regional-map-2
 Next step: separating the CI/CD to different pipelines instead of one big pipeline doing all the changes each run.
 
 Separated and recreated both files, testing now.
+
+# 27.1.2026
+
+Created a new IAM stack on top of everything else so everything is now connected in place. This is the output now with EC2 "running" mocked on Localstack:
+
+$ aws --endpoint-url=http://localhost:4566 ec2 describe-instances \
+  --query "Reservations[*].Instances[*].{ID:InstanceId,Status:State.Name,IP:PrivateIpAddress,IAM:IamInstanceProfile.Arn}" \
+
+  --output table
+-----------------------------------------------------------------
+|                       DescribeInstances                       |
++------+-----------------------+------------------+-------------+
+|  IAM |          ID           |       IP         |   Status    |
++------+-----------------------+------------------+-------------+
+
+  --output table
+-----------------------------------------------------------------
+|                       DescribeInstances                       |
++------+-----------------------+------------------+-------------+
+|  IAM |          ID           |       IP         |   Status    |
++------+-----------------------+------------------+-------------+
++------+-----------------------+------------------+-------------+
+|  IAM |          ID           |       IP         |   Status    |
++------+-----------------------+------------------+-------------+
++------+-----------------------+------------------+-------------+
+|  None|  i-2dd70cdc3809fbead  |  10.108.222.100  |  terminated |
+|  None|  i-841edf5a775dc0f30  |  10.171.121.161  |  running    |
++------+-----------------------+------------------+-------------+
+(.venv)
