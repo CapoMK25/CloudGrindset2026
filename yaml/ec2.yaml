@@ -9,12 +9,9 @@ Resources:
     Properties:
       ImageId: ami-fake-local
       InstanceType: !Ref 'InstanceType'
-      NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeviceIndex: '0'
-          GroupSet:
-            - !Ref 'WebServerSG'
-          SubnetId: !ImportValue 'GrindsetPublicSubnet-ID'
+      SecurityGroupIds:
+        - !Ref 'WebServerSG'
+      SubnetId: !ImportValue 'GrindsetPublicSubnet-ID'
       UserData: !Base64 "#!/bin/bash\napt update\napt install -y nginx\nsystemctl enable nginx\nsystemctl start nginx\n"
     Type: AWS::EC2::Instance
   WebServerSG:
