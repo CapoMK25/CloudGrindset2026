@@ -50,12 +50,13 @@ systemctl enable nginx
 systemctl start nginx
 '''
 
-# 2. EC2 Instance - Using NetworkInterface to specify Subnet and SG
+# 2. EC2 Instance sing NetworkInterface to specify Subnet and SG + IAM setup
 web_instance = t.add_resource(
     Instance(
         "WebServerInstance",
         ImageId="ami-fake-local",
         InstanceType=Ref(instance_type_param),
+        IamInstanceProfile=ImportValue("iam-stack-InstanceProfileName"),
         SubnetId=ImportValue("GrindsetPublicSubnet-ID"),
         SecurityGroupIds=[Ref(web_sg)],
         UserData=Base64(USERDATA_SCRIPT)
