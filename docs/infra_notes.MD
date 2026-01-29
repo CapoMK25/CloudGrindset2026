@@ -438,3 +438,9 @@ $ aws --endpoint-url=http://localhost:4566 ec2 describe-instances \
 |  None|  i-841edf5a775dc0f30  |  10.171.121.161  |  running    |
 +------+-----------------------+------------------+-------------+
 (.venv)
+
+# 29.1.2026
+
+Today I almost finalized the project for as long as it can go. I created an AI-assisted script for automating the entire deployment and the entire teardown/cleanup for the entire stack.
+
+- Updated the entire README.MD as well to reflect the actual state of the project
