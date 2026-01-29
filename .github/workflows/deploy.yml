@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -31,18 +31,32 @@ jobs:
           pip install localstack-client
 
       - name: Start LocalStack
-        run: docker run -d -p 4566:4566 -p 4571:4571 localstack/localstack
+        run: |
+          docker run -d --name localstack_main \
+            -p 4566:4566 -p 4510-4559:4510-4559 \
+            localstack/localstack:latest
 
       - name: Wait for LocalStack
         run: |
-          echo "Waiting for LocalStack..."
-          until curl -s http://localhost:4566/_localstack/health | grep '"services":'; do
-            sleep 10
+          echo "Waiting for LocalStack CloudFormation to be ready..."
+          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
+            sleep 5
           done
 
-      - name: Deploy stacks to LocalStack
+      - name: Deploy Infrastructure
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
-        run: bash ./lab_scripts/deploy.sh
+          ENDPOINT_URL: http://localhost:4566
+        run: |
+          chmod +x ./lab_scripts/deploy_all.sh
+          ./lab_scripts/deploy_all.sh
+
+      - name: Verify Stacks
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          aws --endpoint-url=http://localhost:4566 cloudformation list-stacks --stack-status-filter CREATE_COMPLETE
