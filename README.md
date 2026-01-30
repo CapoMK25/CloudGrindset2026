@@ -6,6 +6,11 @@ A professional-grade, local-first Infrastructure as Code (IaC) laboratory. This 
 # Project Overview
 This repository transitions away from manual AWS Console clicks or even multi-step IaC deployments into a fully automated "Software-Defined Data Center". It utilizes a "Transpile-and-Orchestrate" pattern common in high-scale DevOps environments.
 
+# Deployment Strategy
+This project uses a hybrid deployment model to demonstrate professional CI/CD practices:
+- LocalStack (Simulation): Every Pull Request triggers a full infrastructure deployment in a GitHub Actions runner. This validates the Troposphere templates and simulates the S3 asset synchronization from a sibling repository (regional-map-2024).
+- GitHub Pages (Live): The frontend remains decoupled in its own dedicated repository, ensuring high availability and independent versioning.
+
 
 # Key Features
 
