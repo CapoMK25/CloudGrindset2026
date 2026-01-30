@@ -12,6 +12,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 IAC_DIR="$REPO_ROOT/iac"
 YAML_DIR="$REPO_ROOT/yaml"
+# Path to regional-map repo on the Desktop
+WEBSITE_CONTENT_DIR="$(cd "$REPO_ROOT/.." && pwd)/regional-map-2024"
 
 # Safety net for deployment
 mkdir -p "$YAML_DIR"
@@ -69,22 +71,30 @@ done
 echo "--------------------------------------------"
 
 # --- 4. Step 2: Ordered Deployment ---
-# Defining the order manually because of ImportValue dependencies
 echo "Step 2: Orchestrating CloudFormation..."
 
-# Level 1: Core Networking (VPC, Subnets)
 deploy_stack "networking"
-
-# Level 2: Identity & Access (Roles, Instance Profiles)
 deploy_stack "iam"
-
-# Level 3: Application Resources (EC2, S3, DynamoDB, Logs)
-# These depend on Networking and IAM existing first
 deploy_stack "ec2"
 deploy_stack "s3"
 deploy_stack "dynamodb"
 deploy_stack "cloudwatch"
 
 echo "--------------------------------------------"
+
+# --- 5. Step 3: Sync Website Content ---
+echo "Step 3: Syncing Website Assets..."
+
+if [ -d "$WEBSITE_CONTENT_DIR" ]; then
+    echo "   - Uploading content from $WEBSITE_CONTENT_DIR"
+    aws --endpoint-url="$ENDPOINT_URL" s3 sync "$WEBSITE_CONTENT_DIR" s3://regional-map-2024-website/ --exclude ".git/*"
+    echo "   - Sync Complete."
+else
+    echo "   - Error: Website content directory not found at $WEBSITE_CONTENT_DIR"
+    echo "   - Skipping S3 sync."
+fi
+
+echo "--------------------------------------------"
 echo "ALL SYSTEMS ONLINE"
 echo "EC2 is running, S3 Website is live, and IAM is wired."
+echo "URL: http://localhost:4566/regional-map-2024-website/index.html"

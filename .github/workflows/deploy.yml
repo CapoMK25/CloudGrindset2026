@@ -16,8 +16,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1. Checkout this repo into a subfolder named 'CloudGrindset2026'
+      - name: Checkout IaC repository
         uses: actions/checkout@v4
+        with:
+          path: CloudGrindset2026
+
+      # 2. Checkout the website repo into a sibling folder
+      - name: Checkout Website repository
+        uses: actions/checkout@v4
+        with:
+          repository: CapoMK25/regional-map-2024
+          path: regional-map-2024
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,6 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd CloudGrindset2026
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install localstack-client
@@ -50,6 +61,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
           ENDPOINT_URL: http://localhost:4566
         run: |
+          cd CloudGrindset2026
           chmod +x ./lab_scripts/deploy_all.sh
           ./lab_scripts/deploy_all.sh
 
