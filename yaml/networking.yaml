@@ -1,10 +1,21 @@
-Description: Custom VPC Networking Layer for CloudGrindset2026
+Description: Multi-AZ Networking Layer for CloudGrindset2026
 Outputs:
-  PublicSubnetId:
-    Description: The ID of the Public Subnet
+  PrivateSubnetIds:
+    Description: List of Private Subnet IDs
     Export:
-      Name: GrindsetPublicSubnet-ID
-    Value: !Ref 'PublicSubnet'
+      Name: GrindsetPrivateSubnets-List
+    Value: !Join
+      - ','
+      - - !Ref 'PrivateSubnetAZ1'
+        - !Ref 'PrivateSubnetAZ2'
+  PublicSubnetIds:
+    Description: List of Public Subnet IDs
+    Export:
+      Name: GrindsetPublicSubnets-List
+    Value: !Join
+      - ','
+      - - !Ref 'PublicSubnetAZ1'
+        - !Ref 'PublicSubnetAZ2'
   VpcId:
     Description: The ID of the VPC
     Export:
@@ -26,15 +37,34 @@ Resources:
         - Key: Name
           Value: Grindset-VPC
     Type: AWS::EC2::VPC
-  PrivateSubnet:
+  PrivateSubnetAZ1:
     Properties:
-      AvailabilityZone: us-east-1b
-      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.10.0/24
       Tags:
         - Key: Name
-          Value: Private-Subnet-DB
+          Value: Private-Subnet-us-east-1a
       VpcId: !Ref 'MainVPC'
     Type: AWS::EC2::Subnet
+  PrivateSubnetAZ2:
+    Properties:
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.11.0/24
+      Tags:
+        - Key: Name
+          Value: Private-Subnet-us-east-1b
+      VpcId: !Ref 'MainVPC'
+    Type: AWS::EC2::Subnet
+  PublicAssocAZ1:
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      SubnetId: !Ref 'PublicSubnetAZ1'
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicAssocAZ2:
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      SubnetId: !Ref 'PublicSubnetAZ2'
+    Type: AWS::EC2::SubnetRouteTableAssociation
   PublicRoute:
     DependsOn: VPCGatewayAttachment
     Properties:
@@ -49,21 +79,26 @@ Resources:
           Value: Public-RT
       VpcId: !Ref 'MainVPC'
     Type: AWS::EC2::RouteTable
-  PublicSubnet:
+  PublicSubnetAZ1:
     Properties:
       AvailabilityZone: us-east-1a
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: Public-Subnet-Web
+          Value: Public-Subnet-us-east-1a
       VpcId: !Ref 'MainVPC'
     Type: AWS::EC2::Subnet
-  PublicSubnetRouteTableAssociation:
+  PublicSubnetAZ2:
     Properties:
-      RouteTableId: !Ref 'PublicRouteTable'
-      SubnetId: !Ref 'PublicSubnet'
-    Type: AWS::EC2::SubnetRouteTableAssociation
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Public-Subnet-us-east-1b
+      VpcId: !Ref 'MainVPC'
+    Type: AWS::EC2::Subnet
   VPCGatewayAttachment:
     Properties:
       InternetGatewayId: !Ref 'InternetGateway'
