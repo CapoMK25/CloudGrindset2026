@@ -1,9 +1,9 @@
 """
 Networking template for LocalStack deployment.
-Creates a custom VPC, Subnets, and Routing infrastructure via Troposphere.
+Refactored for Multi-AZ High Availability.
 """
 
-from troposphere import Template, Ref, Output, Export, Tags
+from troposphere import Template, Ref, Output, Export, Tags, Join
 from troposphere.ec2 import (
     VPC, Subnet, InternetGateway,
     VPCGatewayAttachment, RouteTable, Route,
@@ -11,7 +11,11 @@ from troposphere.ec2 import (
 )
 
 t = Template()
-t.set_description("Custom VPC Networking Layer for CloudGrindset2026")
+t.set_description("Multi-AZ Networking Layer for CloudGrindset2026")
+
+AZS = ["us-east-1a", "us-east-1b"]
+PUBLIC_CIDRS = ["10.0.1.0/24", "10.0.2.0/24"]
+PRIVATE_CIDRS = ["10.0.10.0/24", "10.0.11.0/24"]
 
 # 1. Create the VPC
 main_vpc = t.add_resource(
@@ -24,7 +28,7 @@ main_vpc = t.add_resource(
     )
 )
 
-# 2. Internet Gateway (Required for Public Internet Access)
+# 2. Internet Gateway
 igw = t.add_resource(
     InternetGateway(
         "InternetGateway",
@@ -41,19 +45,7 @@ t.add_resource(
     )
 )
 
-# 4. Public Subnet
-public_subnet = t.add_resource(
-    Subnet(
-        "PublicSubnet",
-        VpcId=Ref(main_vpc),
-        CidrBlock="10.0.1.0/24",
-        MapPublicIpOnLaunch=True,
-        AvailabilityZone="us-east-1a",
-        Tags=Tags(Name="Public-Subnet-Web")
-    )
-)
-
-# 5. Route Table for Public Subnet
+# 4. Route Table for Public Subnets (One table for all public AZs)
 public_route_table = t.add_resource(
     RouteTable(
         "PublicRouteTable",
@@ -62,7 +54,7 @@ public_route_table = t.add_resource(
     )
 )
 
-# 6. Default Route to Internet (0.0.0.0/0) via IGW
+# 5. Default Route to Internet
 t.add_resource(
     Route(
         "PublicRoute",
@@ -73,29 +65,45 @@ t.add_resource(
     )
 )
 
-# 7. Associate Public Subnet with Route Table
-t.add_resource(
-    SubnetRouteTableAssociation(
-        "PublicSubnetRouteTableAssociation",
-        SubnetId=Ref(public_subnet),
-        RouteTableId=Ref(public_route_table),
+# --- DYNAMIC MULTI-AZ GENERATION ---
+public_subnet_refs = []
+private_subnet_refs = []
+
+for i, az in enumerate(AZS):
+    # Public Subnets
+    pub_sn = t.add_resource(
+        Subnet(
+            f"PublicSubnetAZ{i+1}",
+            VpcId=Ref(main_vpc),
+            CidrBlock=PUBLIC_CIDRS[i],
+            MapPublicIpOnLaunch=True,
+            AvailabilityZone=az,
+            Tags=Tags(Name=f"Public-Subnet-{az}")
+        )
     )
-)
+    public_subnet_refs.append(Ref(pub_sn))
 
-# 8. Private Subnet (Isolated, no route to IGW)
-private_subnet = t.add_resource(
-    Subnet(
-        "PrivateSubnet",
-        VpcId=Ref(main_vpc),
-        CidrBlock="10.0.2.0/24",
-        AvailabilityZone="us-east-1b",
-        Tags=Tags(Name="Private-Subnet-DB")
+    t.add_resource(
+        SubnetRouteTableAssociation(
+            f"PublicAssocAZ{i+1}",
+            SubnetId=Ref(pub_sn),
+            RouteTableId=Ref(public_route_table),
+        )
     )
-)
 
-# --- Outputs for Cross-Stack Referencing ---
-# This allows other stacks (like EC2) to know where to deploy.
+    # Private Subnets
+    priv_sn = t.add_resource(
+        Subnet(
+            f"PrivateSubnetAZ{i+1}",
+            VpcId=Ref(main_vpc),
+            CidrBlock=PRIVATE_CIDRS[i],
+            AvailabilityZone=az,
+            Tags=Tags(Name=f"Private-Subnet-{az}")
+        )
+    )
+    private_subnet_refs.append(Ref(priv_sn))
 
+# --- Outputs ---
 t.add_output([
     Output(
         "VpcId",
@@ -104,10 +112,16 @@ t.add_output([
         Export=Export("GrindsetVPC-ID")
     ),
     Output(
-        "PublicSubnetId",
-        Description="The ID of the Public Subnet",
-        Value=Ref(public_subnet),
-        Export=Export("GrindsetPublicSubnet-ID")
+        "PublicSubnetIds",
+        Description="List of Public Subnet IDs",
+        Value=Join(",", public_subnet_refs),
+        Export=Export("GrindsetPublicSubnets-List")
+    ),
+    Output(
+        "PrivateSubnetIds",
+        Description="List of Private Subnet IDs",
+        Value=Join(",", private_subnet_refs),
+        Export=Export("GrindsetPrivateSubnets-List")
     )
 ])
 
