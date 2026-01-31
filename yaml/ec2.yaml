@@ -1,10 +1,45 @@
-Description: EC2 Linux setup integrated with a Custom Networking Stack
+Description: 'Tiered Security: ALB -> EC2 (CloudGrindset 2026)'
 Parameters:
   InstanceType:
     Default: t3.nano
     Description: EC2 Instance Type
     Type: String
 Resources:
+  ALBSecurityGroup:
+    Properties:
+      GroupDescription: Public internet access for the Load Balancer
+      SecurityGroupIngress:
+        - CidrIp: '0.0.0.0/0'
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      Tags:
+        - Key: Name
+          Value: ALB-SG
+      VpcId: !ImportValue 'GrindsetVPC-ID'
+    Type: AWS::EC2::SecurityGroup
+  ApplicationLoadBalancer:
+    Properties:
+      Name: Grindset-ALB
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref 'ALBSecurityGroup'
+      Subnets: !Split
+        - ','
+        - !ImportValue 'GrindsetPublicSubnets-List'
+      Tags:
+        - Key: Name
+          Value: Grindset-ALB
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  WebListener:
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'WebTargetGroup'
+          Type: forward
+      LoadBalancerArn: !Ref 'ApplicationLoadBalancer'
+      Port: 80
+      Protocol: HTTP
+    Type: AWS::ElasticLoadBalancingV2::Listener
   WebServerInstance:
     Properties:
       IamInstanceProfile: !ImportValue 'iam-stack-InstanceProfileName'
@@ -12,21 +47,40 @@ Resources:
       InstanceType: !Ref 'InstanceType'
       SecurityGroupIds:
         - !Ref 'WebServerSG'
-      SubnetId: !ImportValue 'GrindsetPublicSubnet-ID'
+      SubnetId: !ImportValue 'GrindsetPublicSubnets-List'
+      Tags:
+        - Key: Name
+          Value: Grindset-Web-Server
       UserData: !Base64 "#!/bin/bash\napt update\napt install -y nginx\nsystemctl enable nginx\nsystemctl start nginx\n"
     Type: AWS::EC2::Instance
   WebServerSG:
     Properties:
-      GroupDescription: Allow HTTP and SSH access
+      GroupDescription: Allow ONLY ALB and SSH access
       SecurityGroupIngress:
         - CidrIp: '0.0.0.0/0'
           FromPort: 22
           IpProtocol: tcp
           ToPort: 22
-        - CidrIp: '0.0.0.0/0'
-          FromPort: 80
+        - FromPort: 80
           IpProtocol: tcp
+          SourceSecurityGroupId: !Ref 'ALBSecurityGroup'
           ToPort: 80
+      Tags:
+        - Key: Name
+          Value: Web-Server-SG
       VpcId: !ImportValue 'GrindsetVPC-ID'
     Type: AWS::EC2::SecurityGroup
+  WebTargetGroup:
+    Properties:
+      HealthCheckPath: /
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      Targets:
+        - Id: !Ref 'WebServerInstance'
+          Port: 80
+      VpcId: !ImportValue 'GrindsetVPC-ID'
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
 
