@@ -5,9 +5,9 @@ Works with LocalStack
 
 from troposphere import Template, Ref, Output
 from troposphere.s3 import (
-    Bucket, 
-    WebsiteConfiguration, 
-    VersioningConfiguration, 
+    Bucket,
+    WebsiteConfiguration,
+    VersioningConfiguration,
     PublicAccessBlockConfiguration
 )
 
