@@ -4,7 +4,7 @@ Works with LocalStack
 """
 
 from troposphere import Template, Ref, Output
-from troposphere.s3 import Bucket, WebsiteConfiguration
+from troposphere.s3 import Bucket, WebsiteConfiguration, VersioningConfiguration, PublicAccessBlockConfiguration
 
 # Create the template
 t = Template()
@@ -18,8 +18,15 @@ s3_bucket = t.add_resource(
     Bucket(
         "RegionalMap2024Bucket",
         BucketName=BUCKET_NAME,
+        VersioningConfiguration=VersioningConfiguration(Status="Enabled"),
         WebsiteConfiguration=WebsiteConfiguration(
             IndexDocument="index.html"
+        ),
+        PublicAccessBlockConfiguration=PublicAccessBlockConfiguration(
+        BlockPublicAcls=True,
+        BlockPublicPolicy=True,
+        IgnorePublicAcls=True,
+        RestrictPublicBuckets=True
         )
     )
 )
