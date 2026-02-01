@@ -3,7 +3,7 @@ EC2 template for LocalStack deployment locally.
 Creates an EC2 instance linked to a custom VPC via the Troposphere Python Library.
 """
 
-from troposphere import Template, Ref, Parameter, Base64, ImportValue, Tags, Select, Split, Join
+from troposphere import Template, Ref, Parameter, Base64, ImportValue, Tags, Split
 from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
 from troposphere.elasticloadbalancingv2 import (
     LoadBalancer, TargetGroup, Listener, Action, TargetDescription
