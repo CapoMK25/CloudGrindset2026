@@ -19,7 +19,7 @@ t.set_description("Baseline IAM setup with an EC2 Role for LocalStack")
 
 group_name = Sub("${AWS::StackName}-Admins")
 
-# --- EXISTING RESOURCES ---
+# --- EXISTING STACKS ---
 admins_group = t.add_resource(Group("AdminsGroup", GroupName=group_name))
 mk_user = t.add_resource(User("MKUser", UserName=Sub("${AWS::StackName}-MK")))
 
@@ -29,7 +29,21 @@ admin_policy = t.add_resource(
         ManagedPolicyName=Sub("${AWS::StackName}-AdminsAdministratorAccess"),
         PolicyDocument={
             "Version": "2012-10-17",
-            "Statement": [{"Effect": "Allow", "Action": "*", "Resource": "*"}]
+            "Statement": [{
+                "Effect": "Allow", 
+                "Action": [
+                    "ec2:*",
+                    "s3:*",
+                    "iam:*",
+                    "cloudwatch:*",
+                    "vpc*",
+                    "dynamodb*"
+                ], 
+                "Resource": "*",
+                "Condition": {
+                "Bool": {"aws:MultiFactorAuthPresent": "true"}
+                }
+            }]
         },
         Groups=[group_name]
     )
