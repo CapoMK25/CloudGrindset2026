@@ -38,7 +38,7 @@ admin_policy = t.add_resource(
                     "cloudwatch:*",
                     "vpc*",
                     "dynamodb*"
-                ], 
+                ],
                 "Resource": "*",
                 "Condition": {
                 "Bool": {"aws:MultiFactorAuthPresent": "true"}
