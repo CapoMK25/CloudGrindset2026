@@ -13,7 +13,7 @@ IAC_FILE="$1"
 BASENAME="$(basename "$IAC_FILE" .py)"
 
 # Absolute path to repo root (parent of lab_scripts)
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 # Path to the YAML folder at root
 YAML_DIR="$REPO_ROOT/yaml"
