@@ -18,7 +18,10 @@ jobs:
       - name: Generate Templates
         run: |
           pip install troposphere
-          python scripts/generate_infra.py # Adjust to your script path
+          chmod +x lab_scripts/legacy/generate_templates.sh
+          for file in iac/*.py; do
+            ./lab_scripts/legacy/generate_templates.sh "$file"
+          done
       - name: Run Checkov
         uses: bridgecrewio/checkov-action@master
         with:
