@@ -2,7 +2,7 @@ name: CD LocalStack Deployment
 
 on:
   workflow_run:
-    workflows: ["Lint"]
+    workflows: ["Checkov Security Scan"]
     types:
       - completed
 
@@ -40,6 +40,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install localstack-client
+
+      - name: Deploying...
+        run: echo "Security passed! Starting Localstack deployment."
 
       - name: Start LocalStack
         run: |
