@@ -1,7 +1,20 @@
 Description: LocalStack CloudWatch Logs setup
 Resources:
+  CloudWatchLogKey:
+    Properties:
+      Description: KMS Key for CloudWatch Log Group Encryption
+      EnableKeyRotation: true
+      Enabled: true
+      PendingWindowInDays: 7
+    Type: AWS::KMS::Key
+  CloudWatchLogKeyAlias:
+    Properties:
+      AliasName: alias/cloudgrindset-logs
+      TargetKeyId: !Ref 'CloudWatchLogKey'
+    Type: AWS::KMS::Alias
   DemoLogGroup:
     Properties:
+      KmsKeyId: !GetAtt 'CloudWatchLogKey.Arn'
       LogGroupName: cloudgrindset2026-logs
       RetentionInDays: 14
     Type: AWS::Logs::LogGroup

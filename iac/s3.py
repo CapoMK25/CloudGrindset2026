@@ -1,6 +1,6 @@
 """
 Troposphere template: S3 bucket for regional-map-2024 website
-Works with LocalStack
+Works with LocalStack and flagged for checkov
 """
 
 from troposphere import Template, Ref, Output
@@ -8,7 +8,8 @@ from troposphere.s3 import (
     Bucket,
     WebsiteConfiguration,
     VersioningConfiguration,
-    PublicAccessBlockConfiguration
+    PublicAccessBlockConfiguration,
+    LoggingConfiguration
 )
 
 # Create the template
@@ -32,7 +33,11 @@ s3_bucket = t.add_resource(
         BlockPublicPolicy=True,
         IgnorePublicAcls=True,
         RestrictPublicBuckets=True
-        )
+        ),
+        LoggingConfiguration=LoggingConfiguration(
+            DestinationBucketName=Ref("ALBLogBucket"),
+            LogFilePrefix="s3-access-logs/regional-map/"
+        ),
     )
 )
 

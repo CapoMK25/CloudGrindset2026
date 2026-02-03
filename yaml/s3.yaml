@@ -7,6 +7,16 @@ Resources:
   RegionalMap2024Bucket:
     Properties:
       BucketName: regional-map-2024-website
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'ALBLogBucket'
+        LogFilePrefix: s3-access-logs/regional-map/
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
       WebsiteConfiguration:
         IndexDocument: index.html
     Type: AWS::S3::Bucket
