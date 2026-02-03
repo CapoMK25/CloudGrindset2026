@@ -22,7 +22,16 @@ Resources:
       ManagedPolicyName: !Sub '${AWS::StackName}-AdminsAdministratorAccess'
       PolicyDocument:
         Statement:
-          - Action: '*'
+          - Action:
+              - ec2:*
+              - s3:*
+              - iam:*
+              - cloudwatch:*
+              - vpc*
+              - dynamodb*
+            Condition:
+              Bool:
+                aws:MultiFactorAuthPresent: 'true'
             Effect: Allow
             Resource: '*'
         Version: '2012-10-17'

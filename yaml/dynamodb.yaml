@@ -12,9 +12,16 @@ Resources:
           KeyType: HASH
         - AttributeName: SK
           KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+      SSESpecification:
+        KMSMasterKeyId: !ImportValue
+          Fn::Sub: cloudgrindset-cw-stack-KMSKeyArn
+        SSEEnabled: true
+        SSEType: KMS
       TableName: cloudgrindset2026
     Type: AWS::DynamoDB::Table
 
