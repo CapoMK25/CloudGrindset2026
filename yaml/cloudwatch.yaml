@@ -1,4 +1,10 @@
 Description: LocalStack CloudWatch Logs setup
+Outputs:
+  SharedKMSKeyArn:
+    Description: KMS Key ARN for encryption
+    Export:
+      Name: !Sub '${AWS::StackName}-KMSKeyArn'
+    Value: !GetAtt 'CloudWatchLogKey.Arn'
 Resources:
   CloudWatchLogKey:
     Properties:
