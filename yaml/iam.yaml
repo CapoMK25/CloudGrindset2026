@@ -27,8 +27,8 @@ Resources:
               - s3:*
               - iam:*
               - cloudwatch:*
-              - vpc*
-              - dynamodb*
+              - vpc:*
+              - dynamodb:*
             Condition:
               Bool:
                 aws:MultiFactorAuthPresent: 'true'

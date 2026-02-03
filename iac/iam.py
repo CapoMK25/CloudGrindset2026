@@ -36,8 +36,8 @@ admin_policy = t.add_resource(
                     "s3:*",
                     "iam:*",
                     "cloudwatch:*",
-                    "vpc*",
-                    "dynamodb*"
+                    "vpc:*",
+                    "dynamodb:*"
                 ],
                 "Resource": "*",
                 "Condition": {
