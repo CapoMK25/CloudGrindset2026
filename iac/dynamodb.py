@@ -3,8 +3,8 @@ Troposphere template: DynamoDB dummy for localstack, fixed for checkov
 """
 
 from troposphere import Template, Sub, ImportValue
-from troposphere.dynamodb import( 
-Table, KeySchema, AttributeDefinition, 
+from troposphere.dynamodb import(
+Table, KeySchema, AttributeDefinition,
 ProvisionedThroughput, PointInTimeRecoverySpecification,
 SSESpecification
 )

@@ -4,10 +4,16 @@ Creates an EC2 instance linked to a custom VPC via the Troposphere Python Librar
 """
 
 from troposphere import Template, Ref, Parameter, Base64, ImportValue, Tags, Split, Sub
-from troposphere.s3 import Bucket, PublicAccessBlockConfiguration, LoggingConfiguration, VersioningConfiguration
+from troposphere.s3 import( 
+Bucket, PublicAccessBlockConfiguration, 
+LoggingConfiguration, VersioningConfiguration
+)
 from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
 from troposphere.elasticloadbalancingv2 import (
-    LoadBalancer, LoadBalancerAttributes, TargetGroup, Listener, Action, TargetDescription, RedirectConfig
+LoadBalancer, LoadBalancerAttributes, 
+TargetGroup, Listener, 
+Action, TargetDescription, 
+RedirectConfig
 )
 
 t = Template()
