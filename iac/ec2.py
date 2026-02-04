@@ -110,13 +110,13 @@ web_alb = t.add_resource(
         SecurityGroups=[Ref(alb_sg)],
         LoadBalancerAttributes=[
         LoadBalancerAttributes(
-            Key="access_logs.s3.enabled", 
+            Key="access_logs.s3.enabled",
             Value="true"),
         LoadBalancerAttributes(
-            Key="access_logs.s3.bucket", 
+            Key="access_logs.s3.bucket",
             Value=ImportValue("Grindset-ALB-Log-Bucket")),
         LoadBalancerAttributes(
-            Key="routing.http.drop_invalid_header_fields.enabled", 
+            Key="routing.http.drop_invalid_header_fields.enabled",
             Value="true")
         ],
         Tags=Tags(Name="Grindset-Web-ALB")
