@@ -48,8 +48,7 @@ log_archive = t.add_resource(
             "checkov": {
                 "skip": [
                     {
-                        "id": "CKV_AWS_18",
-                        "comment": "This is the log archive bucket; self-logging is not recommended by AWS."
+                        "id": "CKV_AWS_18"
                     }
                 ]
             }

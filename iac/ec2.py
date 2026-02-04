@@ -1,14 +1,19 @@
-from troposphere import( 
-Template, Ref, 
-Parameter, Base64, 
-ImportValue, Tags, 
+"""
+This module defines the EC2 instances and related security groups 
+for the LocalStack deployment using Troposphere.
+"""
+
+from troposphere import(
+Template, Ref,
+Parameter, Base64,
+ImportValue, Tags,
 Split, Select
 )
 from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
 from troposphere.elasticloadbalancingv2 import (
-    LoadBalancer, LoadBalancerAttributes, 
-    TargetGroup, Listener, 
-    Action, TargetDescription
+LoadBalancer, LoadBalancerAttributes,
+TargetGroup, Listener,
+Action, TargetDescription
 )
 
 t = Template()
@@ -17,7 +22,7 @@ t.set_description("Tiered Security: ALB -> EC2 (CloudGrindset 2026)")
 instance_type_param = t.add_parameter(
     Parameter(
         "InstanceType", 
-        Type="String", 
+        Type="String",
         Default="t3.nano"
     )
 )
@@ -31,9 +36,9 @@ alb_sg = t.add_resource(
         SecurityGroupIngress=[
             SecurityGroupRule(
                 Description="Allow HTTP from the Internet",
-                IpProtocol="tcp", 
-                FromPort=80, 
-                ToPort=80, 
+                IpProtocol="tcp",
+                FromPort=80,
+                ToPort=80,
                 CidrIp="0.0.0.0/0"
             )
         ],
@@ -60,9 +65,9 @@ web_sg = t.add_resource(
         SecurityGroupIngress=[
             SecurityGroupRule(
                 Description="Allow HTTP traffic from ALB SG only",
-                IpProtocol="tcp", 
-                FromPort=80, 
-                ToPort=80, 
+                IpProtocol="tcp",
+                FromPort=80,
+                ToPort=80,
                 SourceSecurityGroupId=Ref(alb_sg)
             )
         ],
@@ -104,10 +109,15 @@ web_alb = t.add_resource(
         Subnets=Split(",", ImportValue("GrindsetPublicSubnets-List")),
         SecurityGroups=[Ref(alb_sg)],
         LoadBalancerAttributes=[
-            LoadBalancerAttributes(Key="access_logs.s3.enabled", Value="true"),
-            LoadBalancerAttributes(Key="access_logs.s3.bucket", Value=ImportValue("Grindset-ALB-Log-Bucket")),
-            # Fixes CKV_AWS_131: Drop invalid headers
-            LoadBalancerAttributes(Key="routing.http.drop_invalid_header_fields.enabled", Value="true")
+        LoadBalancerAttributes(
+            Key="access_logs.s3.enabled", 
+            Value="true"),
+        LoadBalancerAttributes(
+            Key="access_logs.s3.bucket", 
+            Value=ImportValue("Grindset-ALB-Log-Bucket")),
+        LoadBalancerAttributes(
+            Key="routing.http.drop_invalid_header_fields.enabled", 
+            Value="true")
         ],
         Tags=Tags(Name="Grindset-Web-ALB")
     )

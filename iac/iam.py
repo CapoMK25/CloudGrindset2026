@@ -1,3 +1,8 @@
+"""
+This module defines the IAM
+for the LocalStack deployment using Troposphere.
+"""
+
 from troposphere import Template, Sub, Export, Output, Ref
 from troposphere.iam import (
     User,
