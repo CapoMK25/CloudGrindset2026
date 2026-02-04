@@ -43,24 +43,19 @@ deploy_stack() {
         TEMPLATE_PATH="$yaml_file"
     fi
 
-    echo "Deploying Stack: $stack_name"
+    echo "Deploying Stack: $stack_name..."
 
-    # Delete if it exists to ensure a clean state
-    if aws --endpoint-url="$ENDPOINT_URL" cloudformation describe-stacks --stack-name "$stack_name" >/dev/null 2>&1; then
-        echo "   - Existing stack found. Deleting..."
-        aws --endpoint-url="$ENDPOINT_URL" cloudformation delete-stack --stack-name "$stack_name"
-        aws --endpoint-url="$ENDPOINT_URL" cloudformation wait stack-delete-complete --stack-name "$stack_name"
-    fi
-
-    # Create new stack
-    aws --endpoint-url="$ENDPOINT_URL" cloudformation create-stack \
+    if aws --endpoint-url="$ENDPOINT_URL" cloudformation deploy \
         --stack-name "$stack_name" \
-        --template-body "file://$TEMPLATE_PATH" \
-        --capabilities CAPABILITY_NAMED_IAM
-
-    echo "   - Waiting for creation..."
-    aws --endpoint-url="$ENDPOINT_URL" cloudformation wait stack-create-complete --stack-name "$stack_name"
-    echo "$stack_name Deployed."
+        --template-file "$yaml_file" \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --no-fail-on-empty-changeset; then
+        
+        echo "$stack_name Deployed Successfully."
+    else
+        echo "Error: Failed to deploy $stack_name"
+        exit 1
+    fi
 }
 
 # --- 3. Step 1: Generate All Templates ---
@@ -75,8 +70,8 @@ echo "Step 2: Orchestrating CloudFormation..."
 
 deploy_stack "networking"
 deploy_stack "iam"
-deploy_stack "ec2"
 deploy_stack "s3"
+deploy_stack "ec2"
 deploy_stack "dynamodb"
 deploy_stack "cloudwatch"
 

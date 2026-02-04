@@ -3,13 +3,17 @@ Troposphere template: S3 bucket for regional-map-2024 website
 Works with LocalStack and flagged for checkov
 """
 
-from troposphere import Template, Ref, Output
+from troposphere import Template, Ref, Output, Sub, Export
 from troposphere.s3 import (
     Bucket,
+    BucketEncryption,
+    BucketPolicy,
     WebsiteConfiguration,
     VersioningConfiguration,
     PublicAccessBlockConfiguration,
-    LoggingConfiguration
+    LoggingConfiguration,
+    ServerSideEncryptionRule,
+    ServerSideEncryptionByDefault
 )
 
 # Create the template
@@ -18,6 +22,90 @@ t.set_description("LocalStack S3 bucket for regional-map-2024 hosting")
 
 # Bucket name
 BUCKET_NAME = "regional-map-2024-website"
+
+# The Archive Bucket
+log_archive = t.add_resource(
+    Bucket(
+        "LogArchiveBucket",
+        BucketName=Sub("${AWS::StackName}-logs-archive"),
+        VersioningConfiguration=VersioningConfiguration(Status="Enabled"),
+        PublicAccessBlockConfiguration=PublicAccessBlockConfiguration(
+            BlockPublicAcls=True,
+            BlockPublicPolicy=True,
+            IgnorePublicAcls=True,
+            RestrictPublicBuckets=True
+        ),
+        BucketEncryption=BucketEncryption(
+            ServerSideEncryptionConfiguration=[
+                ServerSideEncryptionRule(
+                    ServerSideEncryptionByDefault=ServerSideEncryptionByDefault(
+                        SSEAlgorithm="AES256"
+                    )
+                )
+            ]
+        ),
+        Metadata={
+            "checkov": {
+                "skip": [
+                    {
+                        "id": "CKV_AWS_18",
+                        "comment": "This is the log archive bucket; self-logging is not recommended by AWS."
+                    }
+                ]
+            }
+        }
+    )
+)
+
+# 2. Enforce SSL (Fixes CKV_AWS_144/Checkov)
+t.add_resource(
+    BucketPolicy(
+        "LogArchiveBucketPolicy",
+        Bucket=Ref(log_archive),
+        PolicyDocument={
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "AllowSSLRequestsOnly",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Action": "s3:*",
+                    "Resource": [
+                        Sub("arn:aws:s3:::${LogArchiveBucket}"),
+                        Sub("arn:aws:s3:::${LogArchiveBucket}/*")
+                    ],
+                    "Condition": {"Bool": {"aws:SecureTransport": "false"}},
+                }
+            ],
+        },
+    )
+)
+
+# 2. ALB Log Bucket
+alb_log_bucket = t.add_resource(
+    Bucket(
+        "ALBLogBucket",
+        BucketName=Sub("${AWS::StackName}-alb-access-logs"),
+        PublicAccessBlockConfiguration=PublicAccessBlockConfiguration(
+            BlockPublicAcls=True, BlockPublicPolicy=True,
+            IgnorePublicAcls=True, RestrictPublicBuckets=True
+        ),
+        LoggingConfiguration=LoggingConfiguration(
+            DestinationBucketName=Ref(log_archive),
+            LogFilePrefix="alb-access-logs/"
+        ),
+        VersioningConfiguration=VersioningConfiguration(Status="Enabled"),
+        BucketEncryption=BucketEncryption(
+            ServerSideEncryptionConfiguration=[
+                ServerSideEncryptionRule(
+                    ServerSideEncryptionByDefault=ServerSideEncryptionByDefault(
+                        SSEAlgorithm="AES256"
+                    )
+                )
+            ]
+        ),
+    )
+)
 
 # Create the S3 bucket
 s3_bucket = t.add_resource(
@@ -38,8 +126,23 @@ s3_bucket = t.add_resource(
             DestinationBucketName=Ref("ALBLogBucket"),
             LogFilePrefix="s3-access-logs/regional-map/"
         ),
+        BucketEncryption=BucketEncryption(
+            ServerSideEncryptionConfiguration=[
+                ServerSideEncryptionRule(
+                    ServerSideEncryptionByDefault=ServerSideEncryptionByDefault(
+                        SSEAlgorithm="AES256"
+                    )
+                )
+            ]
+        ),
     )
 )
+
+t.add_output(Output(
+    "ALBLogBucketName",
+    Value=Ref(alb_log_bucket),
+    Export=Export("Grindset-ALB-Log-Bucket")
+))
 
 # Output the bucket name
 t.add_output(Output(

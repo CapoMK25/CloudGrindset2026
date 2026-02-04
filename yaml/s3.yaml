@@ -1,11 +1,74 @@
 Description: LocalStack S3 bucket for regional-map-2024 hosting
 Outputs:
+  ALBLogBucketName:
+    Export:
+      Name: Grindset-ALB-Log-Bucket
+    Value: !Ref 'ALBLogBucket'
   BucketName:
     Description: S3 bucket for regional-map-2024
     Value: !Ref 'RegionalMap2024Bucket'
 Resources:
+  ALBLogBucket:
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub '${AWS::StackName}-alb-access-logs'
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'LogArchiveBucket'
+        LogFilePrefix: alb-access-logs/
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+    Type: AWS::S3::Bucket
+  LogArchiveBucket:
+    Metadata:
+      checkov:
+        skip:
+          - comment: This is the log archive bucket; self-logging is not recommended by AWS.
+            id: CKV_AWS_18
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub '${AWS::StackName}-logs-archive'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+    Type: AWS::S3::Bucket
+  LogArchiveBucketPolicy:
+    Properties:
+      Bucket: !Ref 'LogArchiveBucket'
+      PolicyDocument:
+        Statement:
+          - Action: s3:*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${LogArchiveBucket}'
+              - !Sub 'arn:aws:s3:::${LogArchiveBucket}/*'
+            Sid: AllowSSLRequestsOnly
+        Version: '2012-10-17'
+    Type: AWS::S3::BucketPolicy
   RegionalMap2024Bucket:
     Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
       BucketName: regional-map-2024-website
       LoggingConfiguration:
         DestinationBucketName: !Ref 'ALBLogBucket'
