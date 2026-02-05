@@ -1,0 +1,66 @@
+name: Integration Testing
+on:
+  workflow_run:
+    workflows: ["CD LocalStack Deployment"]
+    types:
+      - completed
+
+jobs:
+  integration-test:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout IaC repository
+        uses: actions/checkout@v4
+        with:
+          path: CloudGrindset2026
+
+      - name: Checkout Website repository (Needed for S3 content)
+        uses: actions/checkout@v4
+        with:
+          repository: CapoMK25/regional-map-2024
+          path: regional-map-2024
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          cd CloudGrindset2026
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest boto3 awscli-local
+
+      - name: Start LocalStack
+        run: |
+          docker run -d --name localstack_main \
+            -p 4566:4566 -p 4510-4559:4510-4559 \
+            localstack/localstack:latest
+          
+          # Wait for it to be ready
+          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
+            sleep 5
+          done
+
+      - name: Deploy Infra (Recreating state for tests)
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          cd CloudGrindset2026
+          chmod +x ./lab_scripts/deploy_all.sh
+          ./lab_scripts/deploy_all.sh
+
+      - name: Run Pytest
+        env:
+          STACK_NAME: iam
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          cd CloudGrindset2026
+          pytest tests/test_infra.py -v
