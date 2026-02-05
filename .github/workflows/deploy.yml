@@ -84,5 +84,4 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           cd CloudGrindset2026
-          # No need to restart LocalStack; it's already running here!
-          pytest tests/test_infra.py -v
+          pytest tests/test_infra.py -v -s -ra
