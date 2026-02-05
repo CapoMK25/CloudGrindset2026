@@ -39,7 +39,7 @@ jobs:
           cd CloudGrindset2026
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install localstack-client
+          pip install localstack-client pytest boto3
 
       - name: Deploying...
         run: echo "Security passed! Starting Localstack deployment."
@@ -75,3 +75,14 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           aws --endpoint-url=http://localhost:4566 cloudformation list-stacks --stack-status-filter CREATE_COMPLETE
+
+      - name: Run Integration Tests
+        env:
+          STACK_NAME: iam
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          cd CloudGrindset2026
+          # No need to restart LocalStack; it's already running here!
+          pytest tests/test_infra.py -v
