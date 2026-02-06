@@ -21,7 +21,7 @@ t.set_description("Tiered Security: ALB -> EC2 (CloudGrindset 2026)")
 
 instance_type_param = t.add_parameter(
     Parameter(
-        "InstanceType", 
+        "InstanceType",
         Type="String",
         Default="t3.nano"
     )
