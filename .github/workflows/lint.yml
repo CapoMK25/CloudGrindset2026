@@ -1,4 +1,4 @@
-name: Lint
+name: CI/CD Pipeline Orchestrator
 
 on:
   push:
@@ -7,16 +7,16 @@ on:
     branches: [ main ]
 
 jobs:
+  # 1. The Gatekeeper: Runs Pylint first
   lint:
     name: Lint IaC
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -31,3 +31,15 @@ jobs:
       - name: Run Pylint
         run: |
           pylint iac/*.py
+
+  # 2. The Security Guard: Runs only if Lint passes
+  checkov:
+    name: Security Scan
+    needs: lint
+    uses: ./.github/workflows/check.yml
+
+  # 3. The Deployer: Runs only if the Security Scan passes
+  deploy:
+    name: LocalStack Deploy
+    needs: checkov
+    uses: ./.github/workflows/deploy.yml
