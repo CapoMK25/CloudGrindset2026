@@ -2,6 +2,10 @@
 
 A professional-grade, local-first Infrastructure as Code (IaC) laboratory. This project demonstrates the orchestration of a complex AWS environment—including Networking, IAM, Compute, and Storage using Troposphere (Python) and LocalStack instead of real AWS.
 
+![Lint Status](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/lint.yml/badge.svg)
+![Security Status](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/check.yml/badge.svg)
+![Deploy Status](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/deploy.yml/badge.svg)
+
 ## 🏗 Architecture
 ![Architecture Diagram](./assets/architecture.png)
 
