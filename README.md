@@ -2,6 +2,16 @@
 
 A professional-grade, local-first Infrastructure as Code (IaC) laboratory. This project demonstrates the orchestration of a complex AWS environment—including Networking, IAM, Compute, and Storage using Troposphere (Python) and LocalStack instead of real AWS.
 
+## 🏗 Architecture
+![Architecture Diagram](./assets/architecture.png)
+
+## 🛠 Built with Diagrams-as-Code
+Unlike manual Visio or Draw.io diagrams that go out of date, this project's architecture is generated directly from Python code using the diagrams library.
+
+Automated Updates: Every push to main triggers a GitHub Action runner that regenerates the diagram.
+
+Source of Truth: The infrastructure code and the visual representation are always in sync.
+
 
 # Project Overview
 This repository transitions away from manual AWS Console clicks or even multi-step IaC deployments into a fully automated "Software-Defined Data Center". It utilizes a "Transpile-and-Orchestrate" pattern common in high-scale DevOps environments.
