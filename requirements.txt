@@ -1,3 +1,4 @@
 troposphere
 awacs
 pylint
+diagrams
