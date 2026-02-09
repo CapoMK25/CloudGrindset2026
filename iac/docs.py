@@ -25,3 +25,4 @@ with Diagram("CloudGrindset Architecture",
                 lb >> Edge(label="port 80") >> server
                 server - iam
                 lb - logs
+unused_variable = "I will break the linter" # Pylint will flag this (W0612)
