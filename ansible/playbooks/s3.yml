@@ -1,0 +1,22 @@
+---
+- name: Deploy Website Assets to LocalStack
+  hosts: localhost
+  connection: local
+  vars:
+    target_bucket: "regional-map-2024-website" 
+    source_file: "/mnt/c/Users/Matias.DESKTOP-2SBTD6B/Desktop/regional-map-2024/index.html"
+    aws_endpoint: "http://localhost:4566"
+    aws_region: "us-east-1"
+
+  tasks:
+    - name: Sync website folder to S3
+      amazon.aws.s3_object:
+        bucket: "{{ target_bucket }}"
+        mode: put
+        src: "{{ source_file }}"
+        object: "index.html"
+        endpoint_url: "{{ aws_endpoint }}"
+        region: "{{ aws_region }}"
+        aws_access_key: "test"
+        aws_secret_key: "test"
+        validate_certs: false
