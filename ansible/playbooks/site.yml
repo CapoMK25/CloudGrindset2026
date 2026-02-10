@@ -1,0 +1,17 @@
+---
+- name: Test LocalStack Connection
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_aws_ssm_endpoint_url: http://localhost:4566
+    ansible_aws_s3_endpoint_url: http://localhost:4566
+    aws_region: us-east-1
+  tasks:
+    - name: List S3 buckets
+      amazon.aws.s3_bucket_info:
+        endpoint_url: "http://localhost:4566"
+        region: "{{ aws_region }}"
+      register: bucket_info
+
+    - debug:
+        var: bucket_info
