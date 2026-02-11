@@ -16,7 +16,6 @@ with Diagram("CloudGrindset Architecture",
     with Cluster("Local Emulated Cloud (LocalStack)"):
         bucket = S3("regional-map-2024-website")
         monitor = Cloudwatch("4xx Error Alarm")
-        
         monitor >> Edge(color="firebrick", style="dashed", label="monitors") >> bucket
 
     with Cluster("AWS Cloud"):
