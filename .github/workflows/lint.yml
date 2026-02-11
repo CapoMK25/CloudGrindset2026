@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,8 +46,14 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/architecture.png
-          # Only commit and push if the file actually changed
-          git diff --quiet && git diff --staged --quiet || (git commit -m "docs: auto-update architecture diagram" && git push)
+          # Check if there are actually staged changes to commit
+          if ! git diff --cached --exit-code; then
+            git commit -m "docs: auto-update architecture diagram"
+            # Push to the specific branch currently
+            git push origin HEAD:${{ github.head_ref || github.ref_name }}
+          else
+            echo "No changes to the diagram. Skipping the push."
+          fi
 
   # 2. The Security Guard: Runs only if Lint passes
   checkov:
