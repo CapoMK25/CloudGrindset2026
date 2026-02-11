@@ -1,3 +1,6 @@
 # Ignore Ansible collections
 **/ansible_collections/
 **/collections/
+# Ignore  Python .venv since they are local to everybody
+**/.venv
+**/.venv_wsl

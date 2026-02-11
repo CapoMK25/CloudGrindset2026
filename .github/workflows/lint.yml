@@ -7,13 +7,17 @@ on:
     branches: [ main ]
 
 jobs:
-  # 1. The Gatekeeper: Runs Pylint first
+  # 1. The Architect and the Gatekeeper (pylint and diagrams setup)
   lint:
     name: Lint IaC
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,6 +35,25 @@ jobs:
       - name: Run Pylint
         run: |
           pylint iac/*.py
+
+      - name: Generate Diagram
+        run: |
+          mkdir -p assets
+          python iac/docs.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/architecture.png
+          # Check if there are actually staged changes to commit
+          if ! git diff --cached --exit-code; then
+            git commit -m "docs: auto-update architecture diagram"
+            # Push to the specific branch currently
+            git push origin HEAD:${{ github.head_ref || github.ref_name }}
+          else
+            echo "No changes to the diagram. Skipping the push."
+          fi
 
   # 2. The Security Guard: Runs only if Lint passes
   checkov:
