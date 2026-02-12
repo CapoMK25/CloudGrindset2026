@@ -50,6 +50,6 @@ Resources:
       Namespace: AWS/S3
       Period: '60'
       Statistic: Sum
-      Threshold: '5'
+      Threshold: 5
     Type: AWS::CloudWatch::Alarm
 

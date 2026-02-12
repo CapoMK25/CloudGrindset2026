@@ -62,7 +62,7 @@ s3_4xx_alarm = t.add_resource(Alarm(
     Statistic="Sum",
     Period="60",
     EvaluationPeriods="1",
-    Threshold="5",
+    Threshold=5,
     ComparisonOperator="GreaterThanThreshold",
     Dimensions=[
         MetricDimension(Name="BucketName", Value="regional-map-2024-website"),
