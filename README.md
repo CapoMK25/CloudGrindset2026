@@ -55,14 +55,16 @@ Observability: CloudWatch Metrics & Alarms
 Documentation: Diagrams-as-Code (Graphviz)
 
 ### 🚀 Getting Started
-Prerequisites
+Prerequisites:
+
 Python 3.12+
 
 Docker (for LocalStack)
 
 AWS CLI & awslocal
 
-One-Click Provisioning
+One-Click Provisioning:
+
 The "Master Orchestrator" script handles transpilation and sequential deployment to ensure dependency integrity.
 
 ### 1. Setup Environment
@@ -75,7 +77,7 @@ pip install -r requirements.txt
 ```
 localstack start -d
 ```
-# 3. Deploy the Full Stack
+### 3. Deploy the Full Stack
 ```
 ./lab_scripts/deploy_all.sh
 ```
