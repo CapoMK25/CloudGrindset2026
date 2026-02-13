@@ -31,6 +31,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Save Docker image
+        run: docker save cloudgrindset-app:latest > cloudgrindset-app.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-image
+          path: cloudgrindset-app.tar
+
       - name: Run Pylint
         run: docker run --rm cloudgrindset-app:latest pylint iac/*.py
 
@@ -58,11 +67,20 @@ jobs:
       - name: Checkout IaC
         uses: actions/checkout@v4
 
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-image
+
+      - name: Load Docker image
+        run: docker load < cloudgrindset-app.tar
+
       - name: Generate YAML Templates
         run: |
           mkdir -p yaml
           docker run --rm -v ${{ github.workspace }}/yaml:/app/yaml cloudgrindset-app:latest /bin/bash -c "for f in iac/*.py; do python \$f > yaml/\$(basename \$f .py).yaml; done"
-
+          sudo chown -R $USER:$USER yaml/
+          
       - name: Run Checkov
         uses: bridgecrewio/checkov-action@master
         with:
@@ -85,6 +103,14 @@ jobs:
           repository: CapoMK25/regional-map-2024
           path: regional-map-2024
 
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-image
+
+      - name: Load Docker image
+        run: docker load < cloudgrindset-app.tar
+
       - name: Start LocalStack
         run: |
           docker compose up -d localstack
@@ -95,7 +121,7 @@ jobs:
       - name: Deploy Infrastructure
         env:
           AWS_ENDPOINT_URL: http://localstack:4566
-        run: docker compose up --build app
+        run: docker compose up -d app
 
       - name: Run Integration Tests
         run: |
