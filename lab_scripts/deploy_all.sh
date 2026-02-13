@@ -70,3 +70,4 @@ fi
 
 echo "--------------------------------------------"
 echo "ALL SYSTEMS ONLINE"
+echo "URL: http://localhost:4566/regional-map-2024-website/index.html"

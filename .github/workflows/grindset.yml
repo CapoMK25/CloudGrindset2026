@@ -118,22 +118,16 @@ jobs:
             sleep 5
           done
 
-      - name: Deploy Infrastructure
+      - name: Deploy and Test
         env:
           AWS_ENDPOINT_URL: http://localstack:4566
+          STACK_NAME: iam
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
         run: |
-          docker compose up localstack -d
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
-            sleep 5
-          done
-          docker compose run --name cloudgrindset_app app
-
-      - name: Run Integration Tests
-        run: |
-          docker exec \
-            -e AWS_ENDPOINT_URL=http://localstack:4566 \
-            -e STACK_NAME=iam \
-            -e AWS_DEFAULT_REGION=us-east-1 \
-            -e AWS_ACCESS_KEY_ID=test \
-            -e AWS_SECRET_ACCESS_KEY=test \
-            cloudgrindset_app python -m pytest tests/test_infra.py -v -s -ra
+          docker compose up -d localstack
+          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do sleep 5; done
+          
+          # Run the deployment and tests both here
+          docker compose run --name cloudgrindset_app app bash -c "./lab_scripts/deploy_all.sh && python -m pytest tests/test_infra.py -v"
