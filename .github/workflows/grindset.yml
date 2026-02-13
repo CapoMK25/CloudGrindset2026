@@ -121,7 +121,10 @@ jobs:
       - name: Deploy Infrastructure
         env:
           AWS_ENDPOINT_URL: http://localstack:4566
-        run: docker compose up -d app
+        run: |
+          docker compose up -d app
+          echo "Waiting for the infra deployment to finish..."
+          sleep 30  
 
       - name: Run Integration Tests
         run: |
