@@ -122,9 +122,11 @@ jobs:
         env:
           AWS_ENDPOINT_URL: http://localstack:4566
         run: |
-          docker compose up -d app
-          echo "Waiting for the infra deployment to finish..."
-          sleep 30  
+          docker compose up localstack -d
+          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
+            sleep 5
+          done
+          docker compose run --name cloudgrindset_app app
 
       - name: Run Integration Tests
         run: |
