@@ -1,0 +1,9 @@
+.venv/
+.venv_wsl/
+__pycache__/
+.git/
+node_modules/
+volume/
+*.log
+ansible/collections
+ansible/playbooks/ansible_collections

@@ -24,3 +24,19 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     depends_on:
       - localstack
+  app:
+    container_name: cloudgrindset_app
+    build: .
+    image: cloudgrindset-app:v1.2 
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - WEBSITE_CONTENT_DIR=/regional-map-2024
+    depends_on:
+      localstack:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ../regional-map-2024:/regional-map-2024
