@@ -130,4 +130,4 @@ jobs:
           until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do sleep 5; done
           
           # Run the deployment and tests both here
-          docker compose run --name cloudgrindset_app app bash -c "./lab_scripts/deploy_all.sh && python -m pytest tests/test_infra.py -v"
+          docker compose run --name cloudgrindset_app app bash -c "bash ./lab_scripts/deploy_all.sh && python -m pytest tests/test_infra.py -v"
