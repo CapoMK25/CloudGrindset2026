@@ -2,3 +2,6 @@ troposphere
 awacs
 pylint
 diagrams
+boto3  
+botocore      
+awscli

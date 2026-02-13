@@ -5,16 +5,14 @@ set -e
 export AWS_DEFAULT_REGION=us-east-1
 export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
 export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
-ENDPOINT_URL="http://localhost:4566"
-
+ENDPOINT_URL="${AWS_ENDPOINT_URL:-http://localhost:4566}"
 # Absolute paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 IAC_DIR="$REPO_ROOT/iac"
 YAML_DIR="$REPO_ROOT/yaml"
 # Path to regional-map repo on the Desktop
-WEBSITE_CONTENT_DIR="$(cd "$REPO_ROOT/.." && pwd)/regional-map-2024"
-
+WEBSITE_CONTENT_DIR="${WEBSITE_CONTENT_DIR:-$(cd "$REPO_ROOT/.." && pwd)/regional-map-2024}"
 # Safety net for deployment
 mkdir -p "$YAML_DIR"
 
@@ -48,6 +46,7 @@ deploy_stack() {
     if aws --endpoint-url="$ENDPOINT_URL" cloudformation deploy \
         --stack-name "$stack_name" \
         --template-file "$yaml_file" \
+        --endpoint-url "${AWS_ENDPOINT_URL:-http://localhost:4566}" \
         --capabilities CAPABILITY_NAMED_IAM \
         --no-fail-on-empty-changeset; then
         
