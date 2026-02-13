@@ -3,7 +3,7 @@ Troposphere template: S3 bucket for regional-map-2024 website
 Works with LocalStack and flagged for checkov
 """
 
-from troposphere import Template, Ref, Output, Sub, Export
+from troposphere import Template, Ref, Output, Sub, Export, logs
 from troposphere.s3 import (
     Bucket,
     BucketEncryption,
