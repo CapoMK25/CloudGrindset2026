@@ -126,6 +126,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           docker exec \
+            -e AWS_ENDPOINT_URL=http://localstack:4566 \
             -e STACK_NAME=iam \
             -e AWS_DEFAULT_REGION=us-east-1 \
             -e AWS_ACCESS_KEY_ID=test \

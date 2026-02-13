@@ -3,7 +3,7 @@ import boto3
 import os
 
 # Centralized configuration
-LOCALSTACK_ENDPOINT = "http://localhost:4566"
+LOCALSTACK_ENDPOINT = os.getenv("AWS_ENDPOINT_URL", "http://localhost:4566")
 REGION = "us-east-1"
 
 @pytest.fixture(scope="session")
