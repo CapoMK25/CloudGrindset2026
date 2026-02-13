@@ -5,23 +5,22 @@ set -e
 export AWS_DEFAULT_REGION=us-east-1
 export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
 export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
+
 ENDPOINT_URL="${AWS_ENDPOINT_URL:-http://localhost:4566}"
-# Absolute paths
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 IAC_DIR="$REPO_ROOT/iac"
 YAML_DIR="$REPO_ROOT/yaml"
-# Path to regional-map repo on the Desktop
-WEBSITE_CONTENT_DIR="${WEBSITE_CONTENT_DIR:-$(cd "$REPO_ROOT/.." && pwd)/regional-map-2024}"
-# Safety net for deployment
+WEBSITE_CONTENT_DIR="${WEBSITE_CONTENT_DIR:-$REPO_ROOT/regional-map-2024}"
+
 mkdir -p "$YAML_DIR"
 
 echo "Starting 2026 Cloud Grindset Deployment..."
+echo "Endpoint: $ENDPOINT_URL"
 echo "--------------------------------------------"
 
 # --- 2. Helper Functions ---
-
-# Function to generate YAML from Python Troposphere templates
 generate_yaml() {
     local py_file=$1
     local base_name=$(basename "$py_file" .py)
@@ -29,27 +28,15 @@ generate_yaml() {
     python "$py_file" > "$YAML_DIR/$base_name.yaml"
 }
 
-# Function to deploy a stack
 deploy_stack() {
     local stack_name=$1
-    local yaml_file="$YAML_DIR/$stack_name.yaml"
-    
-    # Path conversion for Windows/Git Bash
-    if command -v cygpath >/dev/null 2>&1; then
-        TEMPLATE_PATH=$(cygpath -w "$yaml_file")
-    else
-        TEMPLATE_PATH="$yaml_file"
-    fi
-
     echo "Deploying Stack: $stack_name..."
 
     if aws --endpoint-url="$ENDPOINT_URL" cloudformation deploy \
         --stack-name "$stack_name" \
-        --template-file "$yaml_file" \
-        --endpoint-url "${AWS_ENDPOINT_URL:-http://localhost:4566}" \
+        --template-file "$YAML_DIR/$stack_name.yaml" \
         --capabilities CAPABILITY_NAMED_IAM \
         --no-fail-on-empty-changeset; then
-        
         echo "$stack_name Deployed Successfully."
     else
         echo "Error: Failed to deploy $stack_name"
@@ -58,15 +45,12 @@ deploy_stack() {
 }
 
 # --- 3. Step 1: Generate All Templates ---
-echo "Step 1: Transpiling Troposphere to YAML..."
 for f in "$IAC_DIR"/*.py; do
     generate_yaml "$f"
 done
-echo "--------------------------------------------"
 
 # --- 4. Step 2: Ordered Deployment ---
-echo "Step 2: Orchestrating CloudFormation..."
-
+# These must exist as .py files in your iac/ folder!
 deploy_stack "networking"
 deploy_stack "iam"
 deploy_stack "s3"
@@ -74,21 +58,16 @@ deploy_stack "ec2"
 deploy_stack "dynamodb"
 deploy_stack "cloudwatch"
 
-echo "--------------------------------------------"
-
 # --- 5. Step 3: Sync Website Content ---
-echo "Step 3: Syncing Website Assets..."
-
 if [ -d "$WEBSITE_CONTENT_DIR" ]; then
-    echo "   - Uploading content from $WEBSITE_CONTENT_DIR"
+    echo "Syncing Website Assets..."
     aws --endpoint-url="$ENDPOINT_URL" s3 sync "$WEBSITE_CONTENT_DIR" s3://regional-map-2024-website/ --exclude ".git/*"
-    echo "   - Sync Complete."
+    echo "Sync Complete."
 else
-    echo "   - Error: Website content directory not found at $WEBSITE_CONTENT_DIR"
-    echo "   - Skipping S3 sync."
+    echo "Error: Website content directory not found at $WEBSITE_CONTENT_DIR"
+    exit 1
 fi
 
 echo "--------------------------------------------"
 echo "ALL SYSTEMS ONLINE"
-echo "EC2 is running, S3 Website is live, and IAM is wired."
 echo "URL: http://localhost:4566/regional-map-2024-website/index.html"

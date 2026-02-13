@@ -1,6 +1,7 @@
 troposphere
 awacs
 pylint
+pytest
 diagrams
 boto3  
 botocore      
