@@ -29,7 +29,7 @@ resource "aws_dynamodb_table" "demo_table" {
   # Server-Side Encryption
   server_side_encryption {
     enabled     = true
-    kms_key_arn = null
+    kms_key_arn = aws_kms_key.log_key.arn
   }
 
   tags = {
