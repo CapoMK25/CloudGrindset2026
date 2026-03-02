@@ -18,7 +18,7 @@ resource "aws_kms_alias" "log_key_alias" {
 resource "aws_cloudwatch_log_group" "demo_log_group" {
   name              = "cloudgrindset2026-logs"
   retention_in_days = 14
-  kms_key_id        = aws_kms_key.log_key.arn
+  # kms_key_id        = aws_kms_key.log_key.arn
 }
 
 resource "aws_cloudwatch_log_stream" "demo_stream" {
