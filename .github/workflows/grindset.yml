@@ -86,6 +86,13 @@ jobs:
         with:
           directory: yaml/
           framework: cloudformation
+          soft_fail: true
+
+      - name: Run Checkov (Terraform)
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform/
+          framework: terraform
           soft_fail: false
 
   # PHASE 3: The Deployer
@@ -96,6 +103,11 @@ jobs:
     steps:
       - name: Checkout IaC
         uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
 
       - name: Checkout Website
         uses: actions/checkout@v4
@@ -117,6 +129,20 @@ jobs:
           until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
             sleep 5
           done
+
+      - name: Terraform Init & Validate
+        working-directory: ./terraform
+        run: |
+          terraform init
+          terraform validate
+
+      - name: Terraform Apply
+        working-directory: ./terraform
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: terraform apply -auto-approve
 
       - name: Deploy and Test
         env:
