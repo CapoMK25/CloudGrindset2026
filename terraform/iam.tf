@@ -11,7 +11,7 @@ resource "aws_iam_user" "mk_user" {
 }
 
 resource "aws_iam_group_membership" "add_mk_to_admins" {
-  name = "add-mk-to-admins"
+  name  = "add-mk-to-admins"
   users = [aws_iam_user.mk_user.name]
   group = aws_iam_group.admins.name
 }
