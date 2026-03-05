@@ -35,7 +35,7 @@ resource "aws_instance" "web_server" {
   ami                  = "ami-fake-local"
   instance_type        = var.instance_type
   iam_instance_profile = aws_iam_instance_profile.web_server_profile.name
-  
+  availability_zone    = var.availability_zones[0]
   subnet_id            = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
@@ -53,7 +53,10 @@ resource "aws_instance" "web_server" {
     aws_subnet.public,
     aws_security_group.web_sg,
     aws_iam_instance_profile.web_server_profile,
-    aws_internet_gateway.igw
+    aws_internet_gateway.igw,
+    aws_route_table_association.public,
+    aws_iam_role_policy.s3_read_access, 
+    aws_security_group.web_sg  
   ]
 
   tags = { Name = "Grindset-Web-Server" }
