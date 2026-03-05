@@ -1,6 +1,8 @@
 # --- 1. VPC & GATEWAY ---
 
 resource "aws_vpc" "main" {
+  # checkov:skip=CKV2_AWS_11: Flow logs not required for LocalStack
+  # checkov:skip=CKV2_AWS_12: Restricting default here so SG is not required
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -31,6 +33,7 @@ resource "aws_route_table" "public" {
 
 # Public Subnets (Iterates over the list of CIDRs)
 resource "aws_subnet" "public" {
+  # checkov:skip=CKV_AWS_130: MapPublicIpOnLaunch is intentional to allow direct access to the web server
   count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidrs[count.index]

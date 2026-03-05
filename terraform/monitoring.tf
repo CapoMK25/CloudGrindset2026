@@ -1,6 +1,7 @@
 # --- 1. ENCRYPTION (KMS) ---
 
 resource "aws_kms_key" "log_key" {
+  # checkov:skip=CKV2_AWS_64: KMS Policy defined via default LocalStack behavior
   description             = "KMS Key for CloudWatch Log Group Encryption"
   deletion_window_in_days = 7
   enable_key_rotation     = true
@@ -16,6 +17,8 @@ resource "aws_kms_alias" "log_key_alias" {
 # --- 2. LOGS ---
 
 resource "aws_cloudwatch_log_group" "demo_log_group" {
+  # checkov:skip=CKV_AWS_338: 14 days is enough for this for now (Checkov wants 1 year)
+  # checkov:skip=CKV_AWS_158: KMS for logs causes 501 errors in LocalStack
   name              = "cloudgrindset2026-logs"
   retention_in_days = 14
   # kms_key_id        = aws_kms_key.log_key.arn

@@ -1,5 +1,9 @@
 # 1. THE LOG ARCHIVE BUCKET
 resource "aws_s3_bucket" "log_archive" {
+  # checkov:skip=CKV_AWS_144: Cross-region replication not needed here
+  # checkov:skip=CKV_AWS_145: KMS encryption not supported in LocalStack
+  # checkov:skip=CKV2_AWS_61: Lifecycle configuration not required for this demo
+  # checkov:skip=CKV2_AWS_62: Event notifications not required
   bucket = "cloudgrindset-logs-archive"
 }
 
@@ -23,7 +27,7 @@ resource "aws_s3_bucket_public_access_block" "log_archive_lockdown" {
   restrict_public_buckets = true
 }
 
-# 2. THE SSL ENFORCEMENT POLICY (Fixes CKV_AWS_144)
+# 2. THE SSL ENFORCEMENT POLICY
 resource "aws_s3_bucket_policy" "log_archive_ssl_only" {
   bucket = aws_s3_bucket.log_archive.id
   policy = jsonencode({
@@ -46,6 +50,12 @@ resource "aws_s3_bucket_policy" "log_archive_ssl_only" {
 
 # 3. REGIONAL MAP WEBSITE BUCKET
 resource "aws_s3_bucket" "website" {
+  # checkov:skip=CKV_AWS_144: Cross-region replication not required
+  # checkov:skip=CKV_AWS_145: KMS encryption skipped for LocalStack compatibility
+  # checkov:skip=CKV_AWS_21: Versioning intentionally disabled to keep local storage light
+  # checkov:skip=CKV2_AWS_6: Public access block would prevent the website from being viewable
+  # checkov:skip=CKV2_AWS_61: Lifecycle configuration not required
+  # checkov:skip=CKV2_AWS_62: Event notifications not required
   bucket = "regional-map-2024-website"
 }
 

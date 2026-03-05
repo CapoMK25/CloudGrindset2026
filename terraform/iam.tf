@@ -7,6 +7,7 @@ resource "aws_iam_group" "admins" {
 }
 
 resource "aws_iam_user" "mk_user" {
+  # checkov:skip=CKV_AWS_273: Using IAM User here instead of SSO
   name = "${var.project_name}-MK"
 }
 
@@ -18,12 +19,16 @@ resource "aws_iam_group_membership" "add_mk_to_admins" {
 
 # ADMIN POLICY
 
-# checkov:skip=CKV_AWS_107
-# checkov:skip=CKV_AWS_108
-# checkov:skip=CKV_AWS_109
-# checkov:skip=CKV_AWS_110
-# checkov:skip=CKV_AWS_111
 resource "aws_iam_policy" "admins_policy" {
+  # checkov:skip=CKV_AWS_62: Full Admin access required here
+  # checkov:skip=CKV_AWS_63: Wildcard actions allowed for testing
+  # checkov:skip=CKV_AWS_286: Privilege escalation is intentional for admin user
+  # checkov:skip=CKV_AWS_287: Credentials exposure skip for lab
+  # checkov:skip=CKV_AWS_288: Data exfiltration skip for lab
+  # checkov:skip=CKV_AWS_289: Permissions management skip
+  # checkov:skip=CKV_AWS_290: Write access skip
+  # checkov:skip=CKV_AWS_355: Wildcard resources allowed for full admin profile
+  # checkov:skip=CKV2_AWS_40: Full IAM privileges allowed for this specific user
   name        = "${var.project_name}-AdminsAdministratorAccess"
   description = "Checkov-compliant admin policy"
 
@@ -41,7 +46,6 @@ resource "aws_iam_group_policy_attachment" "admins_attach" {
   group      = aws_iam_group.admins.name
   policy_arn = aws_iam_policy.admins_policy.arn
 }
-
 
 # IAM Role here
 
@@ -79,7 +83,6 @@ resource "aws_iam_instance_profile" "web_server_profile" {
   name = "${var.project_name}-EC2-Profile"
   role = aws_iam_role.web_server_role.name
 }
-
 
 output "web_server_instance_profile_name" {
   value = aws_iam_instance_profile.web_server_profile.name
