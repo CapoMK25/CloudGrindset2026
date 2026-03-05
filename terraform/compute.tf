@@ -49,5 +49,11 @@ resource "aws_instance" "web_server" {
 
   user_data = base64encode("#!/bin/bash\napt update\napt install -y nginx\nsystemctl start nginx\n")
 
+  depends_on = [
+    aws_subnet.public,
+    aws_security_group.web_sg,
+    aws_iam_instance_profile.web_server_profile
+  ]
+
   tags = { Name = "Grindset-Web-Server" }
 }
