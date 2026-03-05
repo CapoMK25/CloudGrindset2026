@@ -142,7 +142,10 @@ jobs:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
-        run: terraform apply -auto-approve
+        run: |
+          terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public
+          sleep 5
+          terraform apply -auto-approve
 
       - name: Deploy and Test
         env:

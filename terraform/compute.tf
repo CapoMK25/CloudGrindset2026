@@ -52,7 +52,8 @@ resource "aws_instance" "web_server" {
   depends_on = [
     aws_subnet.public,
     aws_security_group.web_sg,
-    aws_iam_instance_profile.web_server_profile
+    aws_iam_instance_profile.web_server_profile,
+    aws_internet_gateway.igw
   ]
 
   tags = { Name = "Grindset-Web-Server" }
