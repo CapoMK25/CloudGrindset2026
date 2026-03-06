@@ -81,39 +81,45 @@ jobs:
       - name: Start LocalStack
         run: |
           docker compose up -d localstack
-          echo "Waiting for EC2 engine to be available..."
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"ec2": "available"'; do
-            sleep 10
-          done
+          echo "Waiting for LocalStack services..."
+          until curl -s http://localhost:4566/_localstack/health | grep -q '"ec2": "available"'; do sleep 5; done
 
       - name: Terraform Init
         working-directory: ./terraform
         run: terraform init
 
-      - name: Terraform Foundations
+      - name: Terraform Foundation
         working-directory: ./terraform
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT_URL: http://localhost:4566
         run: |
           terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public -target=aws_security_group.web_sg -target=aws_iam_instance_profile.web_server_profile
-          echo "Foundations done. Cooldown for 20 seconds..."
-          sleep 20
+          
+          echo "Verifying Subnet visibility in EC2 API..."
+          for i in {1..10}; do
+            if aws --endpoint-url=http://localhost:4566 ec2 describe-subnets --filters Name=tag:Name,Values=Public-Subnet-us-east-1a | grep -q "SubnetId"; then
+              echo "Subnet is visible!"
+              break
+            fi
+            echo "Waiting for EC2 API sync (attempt $i)..."
+            sleep 5
+          done
 
-      - name: Terraform Full Apply & Self-Healing
+      - name: Terraform Final Launch
         working-directory: ./terraform
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
         run: |
-          if ! terraform apply -auto-approve; then
-            echo "DETECTED RACE CONDITION: Cleaning up state and retrying..."
-            terraform state rm aws_instance.web_server || true
+          if ! terraform apply -auto-approve -lock=false; then
+            echo "STILL FAILING: Forcing a state refresh and one last attempt..."
             terraform refresh
-            sleep 15
-            terraform apply -auto-approve
+            sleep 10
+            terraform apply -auto-approve -lock=false
           fi
 
       - name: Deploy and Test
