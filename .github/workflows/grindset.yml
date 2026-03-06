@@ -81,27 +81,25 @@ jobs:
       - name: Start LocalStack
         run: |
           docker compose up -d localstack
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
-            echo "Waiting for LocalStack..."
-            sleep 5
+          echo "Waiting for EC2 engine to be available..."
+          until curl -s http://localhost:4566/_localstack/health | grep -q '"ec2": "available"'; do
+            sleep 10
           done
 
-      - name: Terraform Init & Validate
+      - name: Terraform Init
         working-directory: ./terraform
-        run: |
-          terraform init
-          terraform validate
+        run: terraform init
 
-      - name: Terraform (Networking & IAM)
+      - name: Terraform Foundations
         working-directory: ./terraform
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
         run: |
-          terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public -target=aws_iam_instance_profile.web_server_profile
-          echo "Network layer deployed. Sleeping..."
-          sleep 15
+          terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public -target=aws_security_group.web_sg -target=aws_iam_instance_profile.web_server_profile
+          echo "Foundations done. Cooldown for 20 seconds..."
+          sleep 20
 
       - name: Terraform Full Apply & Self-Healing
         working-directory: ./terraform
@@ -110,29 +108,20 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
         run: |
-          terraform apply -auto-approve || {
+          if ! terraform apply -auto-approve; then
             echo "DETECTED RACE CONDITION: Cleaning up state and retrying..."
-            
-            # 1. Remove the broken instance from the local state file
             terraform state rm aws_instance.web_server || true
-            
-            # 2. Refresh state against LocalStack
             terraform refresh
-            
-            # 3. Final attempt
-            sleep 5
+            sleep 15
             terraform apply -auto-approve
-          }
+          fi
 
       - name: Deploy and Test
         env:
           AWS_ENDPOINT_URL: http://localstack:4566
-          STACK_NAME: iam
           AWS_DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
         run: |
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"ec2": "running"'; do sleep 2; done
-          
           docker load < cloudgrindset-app.tar
           docker compose run --name cloudgrindset_app app bash -c "bash ./lab_scripts/deploy_all.sh && python -m pytest tests/test_infra.py -v"

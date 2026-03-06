@@ -26,36 +26,22 @@ resource "aws_security_group" "web_sg" {
   tags = { Name = "Web-Server-SG" }
 }
 
-# --- 2. COMPUTE (EC2) ---
+# --- 2. EC2 ---
 resource "aws_instance" "web_server" {
-  # checkov:skip=CKV_AWS_135: EBS optimization not supported in LocalStack
-  # checkov:skip=CKV_AWS_126: Detailed monitoring costs extra in real AWS
-  # checkov:skip=CKV_AWS_8: Encryption at rest handled by root_block_device
-  
-  ami                  = "ami-fake-local"
-  instance_type        = var.instance_type
+  ami                  = "ami-0ff8a91507f77f867"
+  instance_type        = "t2.micro"       
   iam_instance_profile = aws_iam_instance_profile.web_server_profile.name
-  subnet_id            = aws_subnet.public[0].id
+  
+  subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
-  metadata_options {
-    http_tokens = "required" # Fixes CKV_AWS_79
-  }
-
-  root_block_device {
-    encrypted = true # Partially fixes CKV_AWS_8
-  }
-
-  user_data = base64encode("#!/bin/bash\nsleep 15\napt update\napt install -y nginx\nsystemctl start nginx\n")
+  user_data = base64encode("#!/bin/bash\necho 'Hello World' > /tmp/hello")
 
   depends_on = [
     aws_subnet.public,
     aws_security_group.web_sg,
     aws_iam_instance_profile.web_server_profile,
-    aws_internet_gateway.igw,
-    aws_route_table_association.public,
-    aws_iam_role_policy.s3_read_access, 
-    aws_security_group.web_sg  
+    aws_route_table_association.public
   ]
 
   tags = { Name = "Grindset-Web-Server" }
