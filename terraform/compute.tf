@@ -28,12 +28,26 @@ resource "aws_security_group" "web_sg" {
 
 # --- 2. EC2 ---
 resource "aws_instance" "web_server" {
+  # checkov:skip=CKV_AWS_135: EBS optimization not supported
   ami                  = "ami-0ff8a91507f77f867"
-  instance_type        = "t2.micro"       
+  instance_type        = "t2.medium"
+  ebs_optimized        = true      
   iam_instance_profile = aws_iam_instance_profile.web_server_profile.name
+  monitoring           = true
   
   subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
+
+  # Fixes CKV_AWS_79 (IMDSv2 required)
+  metadata_options {
+    http_tokens   = "required"
+    http_endpoint = "enabled"
+  }
+
+  # Fixes CKV_AWS_8 (Root block device encryption)
+  root_block_device {
+    encrypted = true
+  }
 
   user_data = base64encode("#!/bin/bash\necho 'Hello World' > /tmp/hello")
 
