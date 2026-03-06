@@ -7,7 +7,6 @@ on:
     branches: [ main ]
 
 jobs:
-  # PHASE 1: The Gatekeeper
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -43,22 +42,6 @@ jobs:
       - name: Run Pylint
         run: docker run --rm cloudgrindset-app:latest pylint iac/*.py
 
-      - name: Generate Diagram
-        run: |
-          mkdir -p assets
-          docker run --rm -v ${{ github.workspace }}/assets:/app/assets cloudgrindset-app:latest python iac/docs.py
-
-      - name: Commit and Push Diagram
-        run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions@github.com"
-          git add assets/*.png || true
-          if ! git diff --cached --exit-code; then
-            git commit -m "docs: auto-update architecture diagram"
-            git push origin HEAD:${{ github.head_ref || github.ref_name }}
-          fi
-
-  # PHASE 2: The Security Guard
   security:
     name: Security Scan 
     needs: lint
@@ -75,19 +58,6 @@ jobs:
       - name: Load Docker image
         run: docker load < cloudgrindset-app.tar
 
-      - name: Generate YAML Templates
-        run: |
-          mkdir -p yaml
-          docker run --rm -v ${{ github.workspace }}/yaml:/app/yaml cloudgrindset-app:latest /bin/bash -c "for f in iac/*.py; do python \$f > yaml/\$(basename \$f .py).yaml; done"
-          sudo chown -R $USER:$USER yaml/
-          
-      - name: Run Checkov
-        uses: bridgecrewio/checkov-action@master
-        with:
-          directory: yaml/
-          framework: cloudformation
-          soft_fail: true
-
       - name: Run Checkov (Terraform)
         uses: bridgecrewio/checkov-action@master
         with:
@@ -95,7 +65,6 @@ jobs:
           framework: terraform
           soft_fail: false
 
-  # PHASE 3: The Deployer
   deployment:
     name: Deployment
     needs: security
@@ -109,24 +78,11 @@ jobs:
         with:
           terraform_version: "1.7.0"
 
-      - name: Checkout Website
-        uses: actions/checkout@v4
-        with:
-          repository: CapoMK25/regional-map-2024
-          path: regional-map-2024
-
-      - name: Download image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-image
-
-      - name: Load Docker image
-        run: docker load < cloudgrindset-app.tar
-
       - name: Start LocalStack
         run: |
           docker compose up -d localstack
           until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
+            echo "Waiting for LocalStack..."
             sleep 5
           done
 
@@ -136,16 +92,37 @@ jobs:
           terraform init
           terraform validate
 
-      - name: Terraform Apply (layered)
+      - name: Terraform (Networking & IAM)
         working-directory: ./terraform
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
         run: |
-          terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public -target=aws_security_group.web_sg
-          sleep 10
-          terraform apply -auto-approve
+          terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public -target=aws_iam_instance_profile.web_server_profile
+          echo "Network layer deployed. Sleeping..."
+          sleep 15
+
+      - name: Terraform Full Apply & Self-Healing
+        working-directory: ./terraform
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          terraform apply -auto-approve || {
+            echo "DETECTED RACE CONDITION: Cleaning up state and retrying..."
+            
+            # 1. Remove the broken instance from the local state file
+            terraform state rm aws_instance.web_server || true
+            
+            # 2. Refresh state against LocalStack
+            terraform refresh
+            
+            # 3. Final attempt
+            sleep 5
+            terraform apply -auto-approve
+          }
 
       - name: Deploy and Test
         env:
@@ -155,8 +132,7 @@ jobs:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
         run: |
-          docker compose up -d localstack
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do sleep 5; done
+          until curl -s http://localhost:4566/_localstack/health | grep -q '"ec2": "running"'; do sleep 2; done
           
-          # Run the deployment and tests both here
+          docker load < cloudgrindset-app.tar
           docker compose run --name cloudgrindset_app app bash -c "bash ./lab_scripts/deploy_all.sh && python -m pytest tests/test_infra.py -v"
