@@ -46,7 +46,7 @@ resource "aws_instance" "web_server" {
     encrypted = true # Partially fixes CKV_AWS_8
   }
 
-  user_data = base64encode("#!/bin/bash\napt update\napt install -y nginx\nsystemctl start nginx\n")
+  user_data = base64encode("#!/bin/bash\nsleep 15\napt update\napt install -y nginx\nsystemctl start nginx\n")
 
   depends_on = [
     aws_subnet.public,
