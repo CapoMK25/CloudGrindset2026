@@ -96,7 +96,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
           AWS_ENDPOINT_URL: http://localhost:4566
         run: |
-          terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public -target=aws_security_group.web_sg -target=aws_iam_instance_profile.web_server_profile
+          terraform apply -auto-approve
           
           echo "Verifying Subnet visibility in EC2 API..."
           for i in {1..10}; do
