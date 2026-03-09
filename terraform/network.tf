@@ -69,3 +69,36 @@ output "vpc_id" {
 output "public_subnet_ids" {
   value = aws_subnet.public[*].id
 }
+
+# --- 5. SECURITY GROUP ---
+
+resource "aws_security_group" "web_sg" {
+  name        = "Web-Server-SG"
+  description = "Allow direct HTTP access"
+  vpc_id      = aws_vpc.main.id
+
+  # CKV_AWS_260: Justified, this is a public-facing web server 
+  # that must be accessible via HTTP from the internet.
+  # checkov:skip=CKV_AWS_260: Public web server requires HTTP access
+  ingress {
+    description = "Allow HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # CKV_AWS_382: Justified, egress should be allowed to all for package updates (yum/apt).
+  # In a production environment, this would be restricted to specific 
+  # NAT Gateway IPs or internal repo mirrors.
+  # checkov:skip=CKV_AWS_382: Allow all outbound for necessary OS updates
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "Web-Server-SG" }
+}
