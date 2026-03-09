@@ -84,11 +84,17 @@ jobs:
           echo "Waiting for LocalStack services..."
           until curl -s http://localhost:4566/_localstack/health | grep -q '"ec2": "available"'; do sleep 5; done
 
-      - name: Terraform Init
+      - name: Terraform Init & Clean
         working-directory: ./terraform
-        run: terraform init
+        run: |
+          rm -rf .terraform .terraform.lock.hcl
+          terraform init
 
-      - name: Terraform Foundation
+      - name: Terraform Validate
+        working-directory: ./terraform
+        run: terraform validate
+
+      - name: Terraform Plan and Apply
         working-directory: ./terraform
         env:
           AWS_ACCESS_KEY_ID: test
@@ -96,31 +102,19 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
           AWS_ENDPOINT_URL: http://localhost:4566
         run: |
-          terraform apply -auto-approve
+          terraform plan -out=main.tfplan
+          terraform apply -auto-approve main.tfplan
           
           echo "Verifying Subnet visibility in EC2 API..."
           for i in {1..10}; do
             if aws --endpoint-url=http://localhost:4566 ec2 describe-subnets --filters Name=tag:Name,Values=Public-Subnet-us-east-1a | grep -q "SubnetId"; then
-              echo "Subnet is visible!"
-              break
+              echo "Infrastructure verified!"
+              exit 0
             fi
-            echo "Waiting for EC2 API sync (attempt $i)..."
+            echo "Waiting for a sync (attempt $i)..."
             sleep 5
           done
-
-      - name: Terraform Final Launch
-        working-directory: ./terraform
-        env:
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_DEFAULT_REGION: us-east-1
-        run: |
-          if ! terraform apply -auto-approve -lock=false; then
-            echo "STILL FAILING: Forcing a state refresh and one last attempt..."
-            terraform refresh
-            sleep 10
-            terraform apply -auto-approve -lock=false
-          fi
+          exit 1
 
       - name: Deploy and Test
         env:
