@@ -108,21 +108,30 @@ jobs:
         run: |
           for i in {1..3}; do
             echo "Apply attempt $i..."
-            if [ $i -eq 1 ]; then
-              terraform plan -out=main.tfplan
-              terraform apply -auto-approve main.tfplan && break
+            # Capture stdout and stderr
+            if terraform apply -auto-approve main.tfplan > output.log 2>&1; then
+              echo "Apply successful!"
+              break
             else
-              terraform apply -auto-approve && break
+              echo "Apply failed on attempt $i. Capturing logs..."
+              docker logs cloudgrindset2026 > localstack_failure_$i.log 2>&1
+              cat output.log
+              
+              if [ $i -eq 3 ]; then
+                echo "Final attempt failed."
+                exit 1
+              fi
+              echo "Sleeping for 15s..."
+              sleep 15
             fi
-
-            if [ $i -eq 3 ]; then
-              echo "Failed after 3 attempts."
-              exit 1
-            fi
-            
-            echo "Attempt $i failed (likely LocalStack eventual consistency). Sleeping 15s..."
-            sleep 15
           done
+
+      - name: Upload Debug Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: localstack-debug-logs
+          path: terraform/localstack_failure_*.log
 
       - name: Deploy and Test
         env:
