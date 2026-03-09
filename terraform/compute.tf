@@ -22,7 +22,7 @@ resource "aws_instance" "web_server" {
     aws_security_group.web_sg
   ]
 
-  ami                  = "ami-df5ccb86"
+  ami                  = "ami-fake-local"
   instance_type        = "t2.micro"
   ebs_optimized        = true      
   iam_instance_profile = aws_iam_instance_profile.web_server_profile.name
