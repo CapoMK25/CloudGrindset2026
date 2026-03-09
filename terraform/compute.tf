@@ -16,11 +16,13 @@ resource "time_sleep" "wait_for_iam_and_network" {
 resource "aws_instance" "web_server" {
   # checkov:skip=CKV_AWS_135: EBS optimization not supported in LocalStack
   depends_on = [
-  time_sleep.wait_for_iam_and_network, 
-  aws_iam_instance_profile.web_server_profile
+    time_sleep.wait_for_iam_and_network,
+    aws_subnet.public,
+    aws_iam_instance_profile.web_server_profile,
+    aws_security_group.web_sg
   ]
 
-  ami                  = "ami-0ff8a91507f77f867"
+  ami                  = "ami-df5ccb86"
   instance_type        = "t2.micro"
   ebs_optimized        = true      
   iam_instance_profile = aws_iam_instance_profile.web_server_profile.name
