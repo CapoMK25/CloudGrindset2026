@@ -108,13 +108,12 @@ jobs:
         run: |
           for i in {1..3}; do
             echo "Apply attempt $i..."
-            # Capture stdout and stderr
             if terraform apply -auto-approve main.tfplan > output.log 2>&1; then
               echo "Apply successful!"
               break
             else
               echo "Apply failed on attempt $i. Capturing logs..."
-              docker logs cloudgrindset2026 > localstack_failure_$i.log 2>&1
+              docker logs localstack_main > localstack_failure_$i.log 2>&1
               cat output.log
               
               if [ $i -eq 3 ]; then
