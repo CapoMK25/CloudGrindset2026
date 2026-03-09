@@ -92,7 +92,11 @@ jobs:
 
       - name: Terraform Validate
         working-directory: ./terraform
-        run: terraform validate
+        run: |
+          echo "--- Files in current directory ---"
+          ls -F
+          echo "--- Running Validation ---"
+          terraform validate
 
       - name: Terraform Plan and Apply
         working-directory: ./terraform
