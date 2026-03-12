@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# --- 1. Environment & Setup ---
+# --- 1. Local Environment ---
 export AWS_DEFAULT_REGION=us-east-1
 export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
 export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
@@ -18,7 +18,6 @@ mkdir -p "$YAML_DIR"
 
 echo "Starting 2026 Cloud Grindset Deployment..."
 echo "Endpoint: $ENDPOINT_URL"
-echo "--------------------------------------------"
 
 # --- 2. Helper Functions ---
 generate_yaml() {
@@ -30,16 +29,26 @@ generate_yaml() {
 
 deploy_stack() {
     local stack_name=$1
+    local log_file="deploy_${stack_name}_error.log"
+
     echo "Deploying Stack: $stack_name..."
 
     if aws --endpoint-url="$ENDPOINT_URL" cloudformation deploy \
         --stack-name "$stack_name" \
         --template-file "$YAML_DIR/$stack_name.yaml" \
         --capabilities CAPABILITY_NAMED_IAM \
-        --no-fail-on-empty-changeset; then
-        echo "$stack_name Deployed Successfully."
+        --no-fail-on-empty-changeset 2> "$log_file"; then
+        
+        echo "$stack_name Deployed Successfully!"
+        rm -f "$log_file" # Delete the log file when successful
     else
-        echo "Error: Failed to deploy $stack_name"
+        echo "Failed to deploy $stack_name"
+        echo "Detailed AWS Error Logs:"
+        cat "$log_file"
+        
+        # Deletion
+        rm -f "$log_file"
+        
         exit 1
     fi
 }
@@ -49,8 +58,7 @@ for f in "$IAC_DIR"/*.py; do
     generate_yaml "$f"
 done
 
-# --- 4. Step 2: Ordered Deployment ---
-# These must exist as .py files in your iac/ folder!
+# --- 4. Deployment ---
 deploy_stack "networking"
 deploy_stack "iam"
 deploy_stack "s3"
@@ -58,9 +66,9 @@ deploy_stack "ec2"
 deploy_stack "dynamodb"
 deploy_stack "cloudwatch"
 
-# --- 5. Step 3: Sync Website Content ---
+# --- 5. Sync Website Content ---
 if [ -d "$WEBSITE_CONTENT_DIR" ]; then
-    echo "Syncing Website Assets..."
+    echo "Syncing Website Files..."
     aws --endpoint-url="$ENDPOINT_URL" s3 sync "$WEBSITE_CONTENT_DIR" s3://regional-map-2024-website/ --exclude ".git/*"
     echo "Sync Complete."
 else
@@ -68,6 +76,5 @@ else
     exit 1
 fi
 
-echo "--------------------------------------------"
-echo "ALL SYSTEMS ONLINE"
+echo "ALL STACKS ONLINE!"
 echo "URL: http://localhost:4566/regional-map-2024-website/index.html"
