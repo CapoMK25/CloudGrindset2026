@@ -21,10 +21,10 @@ COPY . .
 # Grant execution permissions
 RUN chmod +x lab_scripts/deploy_all.sh
 
-# ENV variables
+# ENV variables for this repo project
 ENV AWS_ACCESS_KEY_ID=test
 ENV AWS_SECRET_ACCESS_KEY=test
 ENV AWS_DEFAULT_REGION=us-east-1
 
-# Set the command to run the main deploy script
+# Set the command to run the main deploy script here
 CMD ["/bin/bash", "lab_scripts/deploy_all.sh"]

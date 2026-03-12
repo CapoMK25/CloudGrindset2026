@@ -1,4 +1,4 @@
-# --- 1. VPC & GATEWAY ---
+# 1. VPC & GATEWAY 
 
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -14,7 +14,7 @@ resource "aws_internet_gateway" "igw" {
   tags = { Name = "${var.project_name}-IGW" }
 }
 
-# --- 2. PUBLIC ROUTING ---
+# 2. PUBLIC ROUTING
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -27,7 +27,7 @@ resource "aws_route_table" "public" {
   tags = { Name = "Public-RT" }
 }
 
-# --- 3. DYNAMIC SUBNET GENERATION ---
+# 3. DYNAMIC SUBNET GENERATION
 
 # Public Subnets (Iterates over the list of CIDRs)
 resource "aws_subnet" "public" {
