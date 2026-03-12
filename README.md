@@ -2,18 +2,16 @@
 
 CloudGrindset 2026 is a professional-grade Infrastructure-as-Code (IaC) laboratory repo designed to simulate a production-ready AWS environment using LocalStack. This repository demonstrates a complete GitOps lifecycle: from programmatic resource definition to automated security auditing and self-updating documentation.
 
-![Lint Status](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/lint.yml/badge.svg)
-![Security Status](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/check.yml/badge.svg)
-![Deploy Status](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/deploy.yml/badge.svg)
+[![Cloud Grindset Pipeline Status](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/grindset.yml/badge.svg)](https://github.com/CapoMK25/CloudGrindset2026/actions/workflows/grindset.yml)
 
 ## 🏗 Architecture
 
-The diagram below is dynamically generated via Python. Unlike static images, this architecture is a "Living Document" that updates automatically whenever the infrastructure code changes.
+The diagram below is dynamically generated via Python using the graphviz/diagrams-as-code style setup. Unlike static images, this architecture is a "Living Document" that updates automatically whenever the infrastructure code changes. At least it's supposed to.
 
 ![Architecture Diagram](./assets/architecture.png)
 
 ## 🛠 The Engineering Core
-1. Programmatic Infrastructure (Troposphere for now, Terraform coming later)
+1. Programmatic Infrastructure (Python Troposphere , Terraform just as a placeholder on this repo)
 Moving beyond static YAML, this project utilizes Python-based IaC. The library can be found here: https://github.com/cloudtools/troposphere
 
 Logic-Driven: Uses Python loops and conditionals to manage complex resource relationships.
@@ -87,7 +85,7 @@ This repository originated as a set of legacy Bash scripts and has evolved into 
 
 ### Key Technical Challenges:
 
-WSL/Windows Interop: Solved environment pathing issues to allow Ansible and LocalStack to communicate across virtual boundaries.
+WSL/Windows Challenges: Solved environment pathing issues to allow Ansible and LocalStack to communicate across virtual boundaries.
 
 Dependency Loops: Implemented a sequential deployment logic to manage cross-stack exports (e.g., VPC IDs required for EC2 Subnets).
 
