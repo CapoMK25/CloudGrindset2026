@@ -1,30 +1,36 @@
-# Use the slim Python image as the base
-FROM python:3.11-slim
+# Enforcing a baseline here, as uncovered by Trivy locally
+FROM debian:13.3
 
-# Set the working directory
+# Baseline updates here to kick off this Dockerfile
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 1. Base stage for dependencies
+FROM python:3.11-slim-bookworm AS builder
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends gcc python3-dev
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Prod
+FROM python:3.11-slim-bookworm
 WORKDIR /app
 
-# Install 'curl' and 'awscli' (or awslocal) needed for the .sh script
+# Install only the "runtime" tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     bash \
     graphviz \
     && rm -rf /var/lib/apt/lists/*
 
-# Requirements to run the thing
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the installed packages from the builder
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
 
-# Copy the entire project
+# Copying to be done here only
 COPY . .
-
-# Grant execution permissions
 RUN chmod +x lab_scripts/deploy_all.sh
 
-# ENV variables for this repo project
-ENV AWS_ACCESS_KEY_ID=test
-ENV AWS_SECRET_ACCESS_KEY=test
-ENV AWS_DEFAULT_REGION=us-east-1
-
-# Set the command to run the main deploy script here
 CMD ["/bin/bash", "lab_scripts/deploy_all.sh"]
