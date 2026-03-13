@@ -58,7 +58,7 @@ jobs:
             git push origin HEAD:${{ github.head_ref || github.ref_name }}
           fi
 
-  # PHASE 2: The Security Guard
+  # The Security Section
   security:
     name: Security Scan 
     needs: lint
@@ -88,7 +88,7 @@ jobs:
           framework: cloudformation
           soft_fail: false
 
-  # PHASE 3: The Deployer
+  # The Deployment Section
   deployment:
     name: Deployment
     needs: security
@@ -120,14 +120,19 @@ jobs:
 
       - name: Deploy and Test
         env:
-          AWS_ENDPOINT_URL: http://localstack:4566
-          STACK_NAME: iam
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
         run: |
+          # Start services here
           docker compose up -d localstack
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do sleep 5; done
           
-          # Run the deployment and tests both here
-          docker compose run --name cloudgrindset_app app bash -c "bash ./lab_scripts/deploy_all.sh && python -m pytest tests/test_infra.py -v"
+          # Waiting for LocalStack here
+          echo "Waiting for LocalStack..."
+          until curl -s http://localhost:4566/_health | grep -q '"cloudformation": "available"'; do
+            sleep 5
+          done
+          
+          # Run the thing here in its entirety
+          docker compose run --rm app bash -c "bash ./lab_scripts/deploy_all.sh && pytest tests/test_infra.py -v"

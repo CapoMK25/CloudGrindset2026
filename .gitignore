@@ -5,6 +5,7 @@
 **/.venv
 **/.venv_wsl
 # Terraform
+terraform/
 .terraform/
 *.tfstate
 *.tfstate.backup

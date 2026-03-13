@@ -5,14 +5,19 @@ services:
     container_name: localstack_main
     image: localstack/localstack
     ports:
-      - "127.0.0.1:4566:4566"            # LocalStack
-      - "127.0.0.1:4510-4559:4510-4559"  # External services range
+      - "127.0.0.1:4566:4566"
+      - "127.0.0.1:4510-4559:4510-4559"
     environment:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   grafana:
     container_name: grafana_main
@@ -24,19 +29,15 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     depends_on:
       - localstack
+
   app:
     container_name: cloudgrindset_app
     build: .
-    image: cloudgrindset-app:v1.2 
-    environment:
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=us-east-1
-      - AWS_ENDPOINT_URL=http://localstack:4566
-      - WEBSITE_CONTENT_DIR=/regional-map-2024
+    env_file:
+      - .env
     depends_on:
       localstack:
         condition: service_healthy
     volumes:
       - .:/app
-      - ../regional-map-2024:/regional-map-2024
+      - ../regional-map-2024:/regional-map-2024:ro #Read-only mode enforced here for cybersec reasons
