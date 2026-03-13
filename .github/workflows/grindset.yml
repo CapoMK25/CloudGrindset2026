@@ -125,14 +125,12 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
         run: |
-          # Start services here
           docker compose up -d localstack
-          
-          # Waiting for LocalStack here
+
           echo "Waiting for LocalStack..."
-          until curl -s http://localhost:4566/_health | grep -q '"cloudformation": "available"'; do
-            sleep 5
+          until nc -z localhost 4566; do
+            sleep 4
           done
           
-          # Run the thing here in its entirety
+          # Run deployment and tests
           docker compose run --rm app bash -c "bash ./lab_scripts/deploy_all.sh && pytest tests/test_infra.py -v"
