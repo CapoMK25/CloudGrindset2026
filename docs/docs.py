@@ -18,17 +18,17 @@ with Diagram("CloudGrindset 2026 Stack",
 
     with Cluster("LocalStack Environment"):
         with Cluster("VPC (10.0.0.0/16)"):
-            
+
             with Cluster("Public Network"):
                 web_server = EC2("Web Server")
                 s3_web = S3("Website Bucket")
-            
+
             with Cluster("Private Data Layer"):
                 db = Dynamodb("User Data")
-        
+
         iam = IAM("Instance Profiles")
         monitor = Cloudwatch("Health Metrics")
-        
+
     # Output connections
     dns >> Edge(label="Resolves to") >> web_server
     web_server >> Edge(label="Syncs") >> s3_web
