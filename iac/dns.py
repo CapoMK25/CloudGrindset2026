@@ -5,10 +5,10 @@ Route 53 style DNS template for LocalStack deployment.
 
 from troposphere import Template, Ref, ImportValue, Output, Export
 from troposphere.route53 import (
-    HostedZone, 
-    HostedZoneVPCs, 
+    HostedZone,
+    HostedZoneVPCs,
     HostedZoneConfiguration,
-    RecordSet, 
+    RecordSet,
     RecordSetGroup
 )
 
