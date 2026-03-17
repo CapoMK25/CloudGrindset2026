@@ -41,12 +41,12 @@ jobs:
           path: cloudgrindset-app.tar
 
       - name: Run Pylint
-        run: docker run --rm cloudgrindset-app:latest pylint iac/*.py
+        run: docker run --rm cloudgrindset-app:latest pylint iac/*.py docs/*.py
 
       - name: Generate Diagram
         run: |
           mkdir -p assets
-          docker run --rm -v ${{ github.workspace }}/assets:/app/assets cloudgrindset-app:latest python iac/docs.py
+          docker run --rm -v ${{ github.workspace }}/assets:/app/assets cloudgrindset-app:latest python docs/docs.py
 
       - name: Commit and Push Diagram
         run: |
@@ -58,7 +58,7 @@ jobs:
             git push origin HEAD:${{ github.head_ref || github.ref_name }}
           fi
 
-  # PHASE 2: The Security Guard
+  # PHASE 2: The Security Section
   security:
     name: Security Scan 
     needs: lint
@@ -88,7 +88,7 @@ jobs:
           framework: cloudformation
           soft_fail: false
 
-  # PHASE 3: The Deployer
+  # PHASE 3: The Deployment Section
   deployment:
     name: Deployment
     needs: security
@@ -111,23 +111,23 @@ jobs:
       - name: Load Docker image
         run: docker load < cloudgrindset-app.tar
 
-      - name: Start LocalStack
-        run: |
-          docker compose up -d localstack
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do
-            sleep 5
-          done
-
       - name: Deploy and Test
         env:
-          AWS_ENDPOINT_URL: http://localstack:4566
-          STACK_NAME: iam
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
+          WEBSITE_CONTENT_DIR: ${{ github.workspace }}/regional-map-2024
         run: |
+          # 1. Start LocalStack once
           docker compose up -d localstack
-          until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"'; do sleep 5; done
+
+          # 2. Wait for the port to be ready
+          echo "Waiting for LocalStack port 4566..."
+          until nc -z localhost 4566; do
+            echo "LocalStack not ready yet... sleeping"
+            sleep 5
+          done
           
-          # Run the deployment and tests both here
-          docker compose run --name cloudgrindset_app app bash -c "bash ./lab_scripts/deploy_all.sh && python -m pytest tests/test_infra.py -v"
+          # 3. Deployment and tests
+          docker compose run --rm app bash -c "bash ./lab_scripts/deploy_all.sh && pytest tests/test_infra.py -v"

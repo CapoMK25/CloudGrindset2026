@@ -1,0 +1,33 @@
+Description: DNS for CloudGrindset2026 - Route 53
+Outputs:
+  HostedZoneId:
+    Description: The ID of the Private Hosted Zone
+    Export:
+      Name: GrindsetHostedZone-ID
+    Value: !Ref 'InternalHostedZone'
+Resources:
+  DnsRecords:
+    Properties:
+      HostedZoneId: !Ref 'InternalHostedZone'
+      RecordSets:
+        - Name: map.grindset.local.
+          ResourceRecords:
+            - 10.0.1.10
+          TTL: '300'
+          Type: A
+        - Name: api.grindset.local.
+          ResourceRecords:
+            - map.grindset.local.
+          TTL: '300'
+          Type: CNAME
+    Type: AWS::Route53::RecordSetGroup
+  InternalHostedZone:
+    Properties:
+      HostedZoneConfig:
+        Comment: DNS (Route53) for the CloudGrindset2026 repo
+      Name: grindset.local
+      VPCs:
+        - VPCId: !ImportValue 'GrindsetVPC-ID'
+          VPCRegion: us-east-1
+    Type: AWS::Route53::HostedZone
+

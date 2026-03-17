@@ -7,3 +7,5 @@ volume/
 *.log
 ansible/collections
 ansible/playbooks/ansible_collections
+.terraform/
+terraform/
