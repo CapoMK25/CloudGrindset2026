@@ -3,16 +3,22 @@ version: '3.8'
 services:
   localstack:
     container_name: localstack_main
-    image: localstack/localstack
+    image: localstack/localstack:3.2.0 # Fixed version to prevent "latest" breaking changes
     ports:
-      - "127.0.0.1:4566:4566"
-      - "127.0.0.1:4510-4559:4510-4559"
+      - "4566:4566"
+      - "4510-4559:4510-4559"
     environment:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
       
   grafana:
     container_name: grafana_main
@@ -32,7 +38,7 @@ services:
       - .env
     depends_on:
       localstack:
-        condition: service_healthy
+        condition: service_healthy 
     volumes:
       - .:/app
-      - ../regional-map-2024:/regional-map-2024:ro # Read-only mode enforced here for cybersec reasons
+      - ../regional-map-2024:/regional-map-2024:ro
