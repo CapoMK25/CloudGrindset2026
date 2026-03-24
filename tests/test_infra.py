@@ -1,4 +1,5 @@
 import pytest
+import boto3
 from botocore.exceptions import ClientError
 
 def test_bucket_exists(s3_client):
