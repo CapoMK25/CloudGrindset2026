@@ -1,12 +1,11 @@
 """
-Simplified EC2 for LocalStack Community Tier
-Removes ALB components to prevent resource deployment loops.
+Secure EC2: Restricted Ingress (Checkov Compliant)
 """
 from troposphere import Template, Ref, Parameter, Base64, ImportValue, Tags, Split, Select
 from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
 
 t = Template()
-t.set_description("Simplified EC2: Direct Access (LocalStack Compatible)")
+t.set_description("Secure EC2: Restricted Ingress for CloudGrindset2026")
 
 instance_type_param = t.add_parameter(
     Parameter(
@@ -16,19 +15,19 @@ instance_type_param = t.add_parameter(
     )
 )
 
-# 1. Simplified Security Group (Direct HTTP Access)
+# 1. Restricted Security Group
 web_sg = t.add_resource(
     SecurityGroup(
         "WebServerSG",
-        GroupDescription="Allow Direct HTTP access for LocalStack testing",
+        GroupDescription="Allow HTTP access ONLY from within the VPC",
         VpcId=ImportValue("GrindsetVPC-ID"),
         SecurityGroupIngress=[
             SecurityGroupRule(
-                Description="Allow HTTP traffic from anywhere",
+                Description="Allow HTTP traffic from the VPC only",
                 IpProtocol="tcp",
                 FromPort=80,
                 ToPort=80,
-                CidrIp="0.0.0.0/0"
+                CidrIp=ImportValue("GrindsetVPC-CIDR")
             )
         ],
         Tags=Tags(Name="Web-Server-SG")
@@ -36,7 +35,6 @@ web_sg = t.add_resource(
 )
 
 # 2. Web Server Instance
-# Fixed IamInstanceProfile to match the actual export name 'iam-InstanceProfileName'
 web_instance = t.add_resource(
     Instance(
         "WebServerInstance",
