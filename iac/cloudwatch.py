@@ -2,8 +2,8 @@
 Troposphere template: Cloudwatch demonstration for localstack, fused with checkov
 """
 import json
-from troposphere import Template, Ref, GetAtt, Export, Output, Sub
-from troposphere.kms import Key, Alias # to satisfy checkov
+from troposphere import Template, Ref, GetAtt, Export, Output
+from troposphere.kms import Key, Alias
 from troposphere.logs import LogGroup, LogStream
 from troposphere.cloudwatch import Alarm, MetricDimension, Dashboard
 
