@@ -1,23 +1,12 @@
 """
-This module defines the EC2 instances and related security groups 
-for the LocalStack deployment using Troposphere.
+Simplified EC2 for LocalStack Community Tier
+Removes ALB components to prevent resource deployment loops.
 """
-
-from troposphere import(
-Template, Ref,
-Parameter, Base64,
-ImportValue, Tags,
-Split, Select
-)
+from troposphere import Template, Ref, Parameter, Base64, ImportValue, Tags, Split, Select
 from troposphere.ec2 import Instance, SecurityGroup, SecurityGroupRule
-from troposphere.elasticloadbalancingv2 import (
-LoadBalancer, LoadBalancerAttributes,
-TargetGroup, Listener,
-Action, TargetDescription
-)
 
 t = Template()
-t.set_description("Tiered Security: ALB -> EC2 (CloudGrindset 2026)")
+t.set_description("Simplified EC2: Direct Access (LocalStack Compatible)")
 
 instance_type_param = t.add_parameter(
     Parameter(
@@ -27,124 +16,37 @@ instance_type_param = t.add_parameter(
     )
 )
 
-# 1. ALB Security Group
-alb_sg = t.add_resource(
+# 1. Simplified Security Group (Direct HTTP Access)
+web_sg = t.add_resource(
     SecurityGroup(
-        "ALBSecurityGroup",
-        GroupDescription="Public internet access for the Load Balancer",
+        "WebServerSG",
+        GroupDescription="Allow Direct HTTP access for LocalStack testing",
         VpcId=ImportValue("GrindsetVPC-ID"),
         SecurityGroupIngress=[
             SecurityGroupRule(
-                Description="Allow HTTP from the Internet",
+                Description="Allow HTTP traffic from anywhere",
                 IpProtocol="tcp",
                 FromPort=80,
                 ToPort=80,
                 CidrIp="0.0.0.0/0"
             )
         ],
-        Tags=Tags(Name="ALB-SG"),
-        Metadata={
-            "checkov": {
-                "skip": [
-                    {
-                        "id": "CKV_AWS_260",
-                        "comment": "ALB must be open on port 80 for public web traffic."
-                    }
-                ]
-            }
-        }
-    )
-)
-
-# 2. Web Server Security Group
-web_sg = t.add_resource(
-    SecurityGroup(
-        "WebServerSG",
-        GroupDescription="Allow ONLY ALB access",
-        VpcId=ImportValue("GrindsetVPC-ID"),
-        SecurityGroupIngress=[
-            SecurityGroupRule(
-                Description="Allow HTTP traffic from ALB SG only",
-                IpProtocol="tcp",
-                FromPort=80,
-                ToPort=80,
-                SourceSecurityGroupId=Ref(alb_sg)
-            )
-        ],
         Tags=Tags(Name="Web-Server-SG")
     )
 )
 
-# 3. Instance
+# 2. Web Server Instance
+# Fixed IamInstanceProfile to match the actual export name 'iam-InstanceProfileName'
 web_instance = t.add_resource(
     Instance(
         "WebServerInstance",
         ImageId="ami-fake-local",
         InstanceType=Ref(instance_type_param),
-        IamInstanceProfile=ImportValue("iam-stack-InstanceProfileName"),
+        IamInstanceProfile=ImportValue("iam-InstanceProfileName"),
         SubnetId=Select(0, Split(",", ImportValue("GrindsetPublicSubnets-List"))),
         SecurityGroupIds=[Ref(web_sg)],
         UserData=Base64("#!/bin/bash\napt update\napt install -y nginx\n"),
         Tags=Tags(Name="Grindset-Web-Server")
-    )
-)
-
-web_target_group = t.add_resource(
-    TargetGroup(
-        "WebTargetGroup",
-        Port=80,
-        Protocol="HTTP",
-        TargetType="instance",
-        Targets=[TargetDescription(Id=Ref(web_instance), Port=80)],
-        VpcId=ImportValue("GrindsetVPC-ID"),
-    )
-)
-
-# 4. Load Balancer
-web_alb = t.add_resource(
-    LoadBalancer(
-        "WebLoadBalancer",
-        Name="Grindset-Web-ALB",
-        Scheme="internet-facing",
-        Subnets=Split(",", ImportValue("GrindsetPublicSubnets-List")),
-        SecurityGroups=[Ref(alb_sg)],
-        LoadBalancerAttributes=[
-        LoadBalancerAttributes(
-            Key="access_logs.s3.enabled",
-            Value="true"),
-        LoadBalancerAttributes(
-            Key="access_logs.s3.bucket",
-            Value=ImportValue("Grindset-ALB-Log-Bucket")),
-        LoadBalancerAttributes(
-            Key="routing.http.drop_invalid_header_fields.enabled",
-            Value="true")
-        ],
-        Tags=Tags(Name="Grindset-Web-ALB")
-    )
-)
-
-# 5. Listener
-web_listener = t.add_resource(
-    Listener(
-        "WebListener",
-        Port=80,
-        Protocol="HTTP",
-        LoadBalancerArn=Ref(web_alb),
-        DefaultActions=[Action(Type="forward", TargetGroupArn=Ref(web_target_group))],
-        Metadata={
-            "checkov": {
-                "skip": [
-                    {
-                        "id": "CKV_AWS_2",
-                        "comment": "Using HTTP for localstack/demo purposes without ACM cert."
-                    },
-                    {
-                        "id": "CKV_AWS_103",
-                        "comment": "TLS 1.2 not applicable for HTTP listener."
-                    }
-                ]
-            }
-        }
     )
 )
 

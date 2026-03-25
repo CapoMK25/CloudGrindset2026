@@ -59,12 +59,12 @@ for f in "$IAC_DIR"/*.py; do
 done
 
 # --- 4. Deployment ---
+deploy_stack "cloudwatch"
 deploy_stack "networking"
 deploy_stack "iam"
 deploy_stack "s3"
 deploy_stack "dynamodb"
 deploy_stack "ec2"
-deploy_stack "cloudwatch"
 deploy_stack "dns"
 
 # --- 5. Sync Website Content ---

@@ -1,6 +1,6 @@
 """
 Route 53 style DNS template for LocalStack deployment.
-
+Simplified to avoid resource deployment loops.
 """
 
 from troposphere import Template, Ref, ImportValue, Output, Export
@@ -8,8 +8,7 @@ from troposphere.route53 import (
     HostedZone,
     HostedZoneVPCs,
     HostedZoneConfiguration,
-    RecordSet,
-    RecordSetGroup
+    RecordSet
 )
 
 t = Template()
@@ -35,25 +34,26 @@ hosted_zone = t.add_resource(
     )
 )
 
-# 2. Add an A-Record (standard practice)
-a_record = t.add_resource(
-    RecordSetGroup(
-        "DnsRecords",
+# 2. Add individual RecordSets instead of a Group to break the loop
+t.add_resource(
+    RecordSet(
+        "MapRecord",
         HostedZoneId=Ref(hosted_zone),
-        RecordSets=[
-            RecordSet(
-                Name=f"map.{DOMAIN_NAME}.",
-                Type="A",
-                TTL="300",
-                ResourceRecords=["10.0.1.10"]
-            ),
-            RecordSet(
-                Name=f"api.{DOMAIN_NAME}.",
-                Type="CNAME",
-                TTL="300",
-                ResourceRecords=[f"map.{DOMAIN_NAME}."]
-            )
-        ]
+        Name=f"map.{DOMAIN_NAME}.",
+        Type="A",
+        TTL="300",
+        ResourceRecords=["10.0.1.10"]
+    )
+)
+
+t.add_resource(
+    RecordSet(
+        "ApiRecord",
+        HostedZoneId=Ref(hosted_zone),
+        Name=f"api.{DOMAIN_NAME}.",
+        Type="CNAME",
+        TTL="300",
+        ResourceRecords=[f"map.{DOMAIN_NAME}."]
     )
 )
 

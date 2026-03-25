@@ -3,7 +3,7 @@ Outputs:
   SharedKMSKeyArn:
     Description: KMS Key ARN for encryption
     Export:
-      Name: !Sub '${AWS::StackName}-KMSKeyArn'
+      Name: cloudgrindset-cw-stack-KMSKeyArn
     Value: !GetAtt 'CloudWatchLogKey.Arn'
 Resources:
   CloudWatchLogKey:
@@ -45,10 +45,10 @@ Resources:
           Value: regional-map-2024-website
         - Name: FilterId
           Value: EntireBucket
-      EvaluationPeriods: '1'
+      EvaluationPeriods: 1
       MetricName: 4xxErrors
       Namespace: AWS/S3
-      Period: '60'
+      Period: 60
       Statistic: Sum
       Threshold: 5
     Type: AWS::CloudWatch::Alarm

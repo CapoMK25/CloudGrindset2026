@@ -6,21 +6,13 @@ Outputs:
       Name: GrindsetHostedZone-ID
     Value: !Ref 'InternalHostedZone'
 Resources:
-  DnsRecords:
-    Properties:
-      HostedZoneId: !Ref 'InternalHostedZone'
-      RecordSets:
-        - Name: map.grindset.local.
-          ResourceRecords:
-            - 10.0.1.10
-          TTL: '300'
-          Type: A
-        - Name: api.grindset.local.
-          ResourceRecords:
-            - map.grindset.local.
-          TTL: '300'
-          Type: CNAME
-    Type: AWS::Route53::RecordSetGroup
+  ApiRecord:
+    HostedZoneId: !Ref 'InternalHostedZone'
+    Name: api.grindset.local.
+    ResourceRecords:
+      - map.grindset.local.
+    TTL: '300'
+    Type: CNAME
   InternalHostedZone:
     Properties:
       HostedZoneConfig:
@@ -30,4 +22,11 @@ Resources:
         - VPCId: !ImportValue 'GrindsetVPC-ID'
           VPCRegion: us-east-1
     Type: AWS::Route53::HostedZone
+  MapRecord:
+    HostedZoneId: !Ref 'InternalHostedZone'
+    Name: map.grindset.local.
+    ResourceRecords:
+      - 10.0.1.10
+    TTL: '300'
+    Type: A
 

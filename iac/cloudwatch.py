@@ -50,7 +50,7 @@ t.add_output(Output(
     "SharedKMSKeyArn",
     Description="KMS Key ARN for encryption",
     Value=GetAtt(log_encryption_key, "Arn"),
-    Export=Export(Sub("${AWS::StackName}-KMSKeyArn")),
+    Export=Export("cloudgrindset-cw-stack-KMSKeyArn"),
 ))
 
 # 1. The Alarm: Triggered if 4xx Errors > 5 in 1 minute
@@ -60,8 +60,8 @@ s3_4xx_alarm = t.add_resource(Alarm(
     MetricName="4xxErrors",
     Namespace="AWS/S3",
     Statistic="Sum",
-    Period="60",
-    EvaluationPeriods="1",
+    Period=60,
+    EvaluationPeriods=1,
     Threshold=5,
     ComparisonOperator="GreaterThanThreshold",
     Dimensions=[
