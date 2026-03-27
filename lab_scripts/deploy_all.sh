@@ -59,13 +59,13 @@ for f in "$IAC_DIR"/*.py; do
 done
 
 # --- 4. Deployment ---
-deploy_stack "networking"
-deploy_stack "iam"
-deploy_stack "s3"
-deploy_stack "dynamodb"
-deploy_stack "ec2"
-deploy_stack "cloudwatch"
-deploy_stack "dns"
+deploy_stack "networking"   # Provides VPC/Subnets
+deploy_stack "iam"          # Provides Roles/Profiles
+deploy_stack "cloudwatch"   # PROVIDE KMS KEYS & LOG GROUPS FIRST
+deploy_stack "s3"           # Provides Buckets
+deploy_stack "dynamodb"     # Uses KMS from cloudwatch
+deploy_stack "ec2"          # Uses IAM, Networking, and KMS
+deploy_stack "dns"          # Final routing
 
 # --- 5. Sync Website Content ---
 if [ -d "$WEBSITE_CONTENT_DIR" ]; then
