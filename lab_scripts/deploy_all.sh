@@ -42,13 +42,17 @@ deploy_stack() {
         echo "$stack_name Deployed Successfully!"
         rm -f "$log_file" # Delete the log file when successful
     else
-        echo "Failed to deploy $stack_name"
-        echo "Detailed AWS Error Logs:"
+        echo "❌ Failed to deploy $stack_name"
+        echo "--- AWS CloudFormation Stack Events ---"
+        # This command pulls the actual reason for failure from LocalStack
+        aws --endpoint-url="$ENDPOINT_URL" cloudformation describe-stack-events \
+            --stack-name "$stack_name" \
+            --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED`].[LogicalResourceId, ResourceStatusReason]' \
+            --output table
+        
+        echo "--- Detailed AWS Error Logs (CLI output) ---"
         cat "$log_file"
-        
-        # Deletion
         rm -f "$log_file"
-        
         exit 1
     fi
 }
