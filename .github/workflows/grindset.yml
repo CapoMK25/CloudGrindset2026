@@ -111,13 +111,6 @@ jobs:
       - name: Load Docker image
         run: docker load < cloudgrindset-app.tar
 
-      - name: Inspect LocalStack Failure
-        if: failure()  # Only runs if the previous step fails
-        run: |
-          docker ps -a
-          docker logs localstack_main
-          docker inspect localstack_main
-          
       - name: Deploy and Test
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -126,15 +119,33 @@ jobs:
           AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
           WEBSITE_CONTENT_DIR: ${{ github.workspace }}/regional-map-2024
         run: |
-          # 1. Start LocalStack once
+          # 1. Start LocalStack
           docker compose up -d localstack
 
-          # 2. Wait for the port to be ready
+          # 2. Wait for the port to be ready (Max 60 seconds)
           echo "Waiting for LocalStack port 4566..."
-          until nc -z localhost 4566; do
-            echo "LocalStack not ready yet... sleeping"
+          for i in {1..12}; do
+            if nc -z localhost 4566; then
+              echo "LocalStack is READY"
+              break
+            fi
+            echo "LocalStack not ready yet... sleeping ($i/12)"
             sleep 5
+            if [ $i -eq 12 ]; then
+              echo "Timeout reached. Failing step for debug."
+              exit 1
+            fi
           done
           
           # 3. Deployment and tests
           docker compose run --rm app bash -c "bash ./lab_scripts/deploy_all.sh && pytest tests/test_infra.py -v"
+
+      - name: Inspect LocalStack Failure
+        if: failure()  # Runs ONLY if Deploy and Test fails
+        run: |
+          echo "=== CONTAINER STATUS ==="
+          docker ps -a
+          echo "=== LOCALSTACK LOGS ==="
+          docker logs localstack_main || echo "No logs found for localstack_main"
+          echo "=== DETAILED ERROR INSPECTION ==="
+          docker inspect localstack_main --format 'ExitCode: {{.State.ExitCode}} | Error: {{.State.Error}}'
