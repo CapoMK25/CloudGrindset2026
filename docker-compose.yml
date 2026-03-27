@@ -3,7 +3,8 @@ version: '3.8'
 services:
   localstack:
     container_name: localstack_main
-    image: localstack/localstack
+    image: localstack/localstack:latest
+    user: root
     ports:
       - "127.0.0.1:4566:4566"
       - "127.0.0.1:4510-4559:4510-4559"
@@ -11,6 +12,7 @@ services:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - LOCALSTACK_HOST=127.0.0.1
+      - PRIVILEGED=true
     volumes:
       - localstack_data:/var/lib/localstack 
       - "/var/run/docker.sock:/var/run/docker.sock"

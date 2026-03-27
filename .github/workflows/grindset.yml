@@ -111,6 +111,13 @@ jobs:
       - name: Load Docker image
         run: docker load < cloudgrindset-app.tar
 
+      - name: Inspect LocalStack Failure
+        if: failure()  # Only runs if the previous step fails
+        run: |
+          docker ps -a
+          docker logs localstack_main
+          docker inspect localstack_main
+          
       - name: Deploy and Test
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
