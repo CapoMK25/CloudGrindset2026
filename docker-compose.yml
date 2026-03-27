@@ -10,8 +10,9 @@ services:
     environment:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_HOST=127.0.0.1
     volumes:
-      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - localstack_data:/var/lib/localstack 
       - "/var/run/docker.sock:/var/run/docker.sock"
       
   grafana:
@@ -41,3 +42,6 @@ services:
     volumes:
       - .:/app
       - ../regional-map-2024:/regional-map-2024:ro # Read-only mode enforced here for cybersec reasons
+
+volumes:
+  localstack_data:
