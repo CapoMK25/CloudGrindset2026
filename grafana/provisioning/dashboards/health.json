@@ -1,0 +1,22 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "title": "S3 4xx Errors (Website Bucket)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "LocalStack" },
+      "targets": [
+        {
+          "namespace": "AWS/S3",
+          "metricName": "4xxErrors",
+          "dimensions": { "BucketName": "regional-map-2024-website", "FilterId": "EntireBucket" },
+          "statistic": "Sum",
+          "period": "60"
+        }
+      ]
+    }
+  ],
+  "title": "Infra Health",
+  "schemaVersion": 36
+}

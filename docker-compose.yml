@@ -3,15 +3,19 @@ version: '3.8'
 services:
   localstack:
     container_name: localstack_main
-    image: localstack/localstack
+    image: localstack/localstack:3.5.0
+    user: root
     ports:
       - "127.0.0.1:4566:4566"
       - "127.0.0.1:4510-4559:4510-4559"
     environment:
+      - PROVIDER_OVERRIDE_CLOUDFORMATION=engine-legacy
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_HOST=127.0.0.1
+      - PRIVILEGED=true
     volumes:
-      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - localstack_data:/var/lib/localstack 
       - "/var/run/docker.sock:/var/run/docker.sock"
       
   grafana:
@@ -22,6 +26,11 @@ services:
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - localstack
 
@@ -36,3 +45,6 @@ services:
     volumes:
       - .:/app
       - ../regional-map-2024:/regional-map-2024:ro # Read-only mode enforced here for cybersec reasons
+
+volumes:
+  localstack_data:
