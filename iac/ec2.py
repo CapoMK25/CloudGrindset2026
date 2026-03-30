@@ -105,7 +105,7 @@ web_target_group = t.add_resource(
         HealthyThresholdCount=2,  # Minimum possible
         UnhealthyThresholdCount=2,  # Minimum possible
         HealthCheckTimeoutSeconds=5,
-        HealthCheckIntervalSeconds=10, 
+        HealthCheckIntervalSeconds=10,
     )
 )
 
