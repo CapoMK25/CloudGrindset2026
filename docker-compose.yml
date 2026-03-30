@@ -9,6 +9,7 @@ services:
       - "127.0.0.1:4566:4566"
       - "127.0.0.1:4510-4559:4510-4559"
     environment:
+      - PROVIDER_OVERRIDE_CLOUDFORMATION=engine-legacy
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - LOCALSTACK_HOST=127.0.0.1

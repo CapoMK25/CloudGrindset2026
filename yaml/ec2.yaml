@@ -24,6 +24,9 @@ Resources:
       VpcId: !ImportValue 'GrindsetVPC-ID'
     Type: AWS::EC2::SecurityGroup
   WebListener:
+    DependsOn:
+      - WebLoadBalancer
+      - WebTargetGroup
     Metadata:
       checkov:
         skip:

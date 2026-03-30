@@ -117,6 +117,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
+          PROVIDER_OVERRIDE_CLOUDFORMATION: engine-legacy
           WEBSITE_CONTENT_DIR: ${{ github.workspace }}/regional-map-2024
         run: |
           # 1. Start LocalStack
