@@ -77,7 +77,7 @@ Resources:
       Tags:
         - Key: Name
           Value: Grindset-Web-Server
-      UserData: !Base64 "#!/bin/bash\napt update\napt install -y nginx\n"
+      UserData: !Base64 "#!/bin/bash\napt update\napt install -y nginx\nsystemctl start nginx\n"
     Type: AWS::EC2::Instance
   WebServerSG:
     Properties:
@@ -95,12 +95,19 @@ Resources:
     Type: AWS::EC2::SecurityGroup
   WebTargetGroup:
     Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
       Port: 80
       Protocol: HTTP
       TargetType: instance
       Targets:
         - Id: !Ref 'WebServerInstance'
           Port: 80
+      UnhealthyThresholdCount: 2
       VpcId: !ImportValue 'GrindsetVPC-ID'
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
 
